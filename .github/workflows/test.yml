@@ -1,0 +1,20 @@
+name: "Send notifications to MS Teams channel"
+
+on: [push]
+
+jobs:
+  notify:
+    runs-on: macos-latest
+    steps:
+      - uses: eleni-salamani/msteams-post-action@feature/add-javascript-action
+        if: always()
+        with:
+          job_status: ${{ job.status }}
+          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
+      - uses: eleni-salamani/msteams-post-action@feature/add-javascript-action
+        if: always()
+        with:
+          job_status: ${{ job.status }}
+          event_id: "testing completed"
+          details: "Testing details will follow"
+          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
