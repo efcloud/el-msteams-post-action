@@ -1,5 +1,5 @@
 # el-msteams-post-action
-This repo contains a re-usable GitHub Action that when installed will post to Microsoft Teams details about various GitHub events.
+This repo contains a re-usable GitHub Action that, when installed, will post to Microsoft Teams details about various GitHub events.
 
 ### Pre-requisites
 To run this action you'll need:
@@ -26,7 +26,7 @@ The action can be configured with the following variables/parameters
 | **event_id**    | optional   | If set, it can override the value of the triggering event. Free text entry, by default it can be any of "push", "pull_request", "issue", "issue_comment" |
 | **details**     | optional   | If set, it can override the details displayed for any of the default triggering events. |
 
-*** Examples
+### Examples
 
 Example of using the action for a push event, without overriding the default values
 
