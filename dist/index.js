@@ -424,7 +424,7 @@ function parse_inputs() {
                     break;
                 default:
                     if (event_name) {
-                        message = event_name.replace(/_/g, "\\_");
+                        message = event_name.replace(/_/g, ".");
                     }
                     else {
                         message = "A GitHub Actions event has occurred";
