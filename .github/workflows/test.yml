@@ -4,17 +4,14 @@ on: [push]
 
 jobs:
   notify:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
-      - uses: eleni-salamani/msteams-post-action@feature/add-javascript-action
-        if: always()
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Test sample notification
+        uses: ./
         with:
           job_status: ${{ job.status }}
-          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
-      - uses: eleni-salamani/msteams-post-action@feature/add-javascript-action
-        if: always()
-        with:
-          job_status: ${{ job.status }}
-          event_id: "testing completed"
-          details: "Testing details will follow"
+          event_id: "testing custom action"
+          details: "Triggered from custom action repo"
           webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
