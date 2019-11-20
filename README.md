@@ -65,3 +65,7 @@ jobs:
           details: "Tests run:2 Failed:0"
           webhook_url: ${{ secrets.TEAMS_WEBHOOK_URL }}
 ```
+
+The generated notifications will look as follows:
+
+## ![img](./resources/notifications.png)
