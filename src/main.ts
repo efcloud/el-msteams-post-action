@@ -21,8 +21,15 @@ let url;
 
 async function parse_inputs() {
     try {
-        msteams_webhook_url = core.getInput('webhook_url');
+
+        // do not proceed if jobs was cancelled
         job_status = core.getInput('job_status');
+        if (job_status.toUpperCase() === "CANCELLED") {
+            console.log("Job was cancelled, no notification will be sent")
+            process.exit(0);
+        }
+
+        msteams_webhook_url = core.getInput('webhook_url');
         event_id = core.getInput('event_id');
 
         const event_payload_data =  JSON.stringify(require(event_payload));
