@@ -423,7 +423,12 @@ function parse_inputs() {
                     details = 'Issue state: ' + event_payload_data_text['issue']['state'] + ' - assignee: ' + event_payload_data_text['issue']['assignee'];
                     break;
                 default:
-                    message = 'A GitHub Actions **' + event_name + '** event has occurred';
+                    if (event_name) {
+                        message = event_name.replace(/_/g, '\_');
+                    }
+                    else {
+                        message = "A GitHub Actions event has occurred";
+                    }
                     url = 'https://github.com/' + repository + '/actions';
             }
             if (!details) {
