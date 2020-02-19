@@ -4,8 +4,16 @@ author: 'EF'
 inputs:
   webhook_url:
     description: 'MS Teams Webhook URL'
+    required: true
+  job_status:
+    description: 'Status of current job'
+    required: true
   event_id:
     description: 'Github event that triggers the notification'
+    required: false
+  details:
+    description: 'Additional details for the triggering event'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
