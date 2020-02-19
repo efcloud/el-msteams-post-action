@@ -14,4 +14,4 @@ jobs:
           job_status: ${{ job.status }}
           event_id: "testing custom action for device iphone8_12_4"
           details: "Triggered from custom action repo"
-          webhook_url: ${{ secrets.ADD_WEBHOOK_URL }}
+          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
