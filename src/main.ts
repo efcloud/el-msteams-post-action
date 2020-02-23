@@ -31,8 +31,8 @@ async function parse_inputs() {
         msteams_webhook_url = core.getInput('webhook_url');
         event_id = core.getInput('event_id');
 
-        const event_payload_data =  JSON.stringify(require(event_payload));
-        const event_payload_data_text = JSON.parse(event_payload_data);
+        const event_payload_data_text =  JSON.stringify(require(event_payload));
+        const event_payload_data = JSON.parse(event_payload_data_text);
 
         if (event_id) {
             event_name = event_id;
@@ -40,25 +40,25 @@ async function parse_inputs() {
 
         switch(event_name){
             case 'push':
-                account = event_payload_data_text['pusher']['name'];
+                account = event_payload_data['pusher']['name'];
                 message = `**Commit to GitHub** by ${account}`;
-                url = event_payload_data_text['compare'];
-                details = `Comment: ${event_payload_data_text['head_commit']['message']}`;
+                url = event_payload_data['compare'];
+                details = `Comment: ${event_payload_data['head_commit']['message']}`;
                 break;
             case 'pull_request':
-                message = `**PR submitted to Github**: ${event_payload_data_text['pull_request']['title']}`;
-                url = event_payload_data_text['pull_request']['html_url'];
-                details = `Pr for merging ref ${event_payload_data_text['pull_request']['head']['ref']} to base branch ${event_payload_data_text['base']['ref']}`;
+                message = `**PR submitted to Github**: ${event_payload_data['pull_request']['title']}`;
+                url = event_payload_data['pull_request']['html_url'];
+                details = `Pr for merging ref ${event_payload_data['pull_request']['head']['ref']} to base branch ${event_payload_data['base']['ref']}`;
                 break;
             case 'issue':
-                message = `**New/updated GitHub issue**: ${event_payload_data_text['issue']['title']}`;
-                url = event_payload_data_text['issue']['html_url'];
-                details = `Issue state: ${event_payload_data_text['issue']['state']}  - assignee: ${event_payload_data_text['issue']['assignee']}`;
+                message = `**New/updated GitHub issue**: ${event_payload_data['issue']['title']}`;
+                url = event_payload_data['issue']['html_url'];
+                details = `Issue state: ${event_payload_data['issue']['state']}  - assignee: ${event_payload_data['issue']['assignee']}`;
                 break;
             case 'issue_comment':
-                message = `**A Github issue comment was posted**: ${event_payload_data_text['comment']['body']}`;
-                url = event_payload_data_text['issue']['html_url'];
-                details = `Issue state: ${event_payload_data_text['issue']['state']} - assignee: ${event_payload_data_text['issue']['assignee']}`;
+                message = `**A Github issue comment was posted**: ${event_payload_data['comment']['body']}`;
+                url = event_payload_data['issue']['html_url'];
+                details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
                 break;
             default:
                 if (event_name) {
