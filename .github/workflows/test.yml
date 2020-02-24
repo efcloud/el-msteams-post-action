@@ -9,7 +9,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Check event payload
-        run: cat ${GITHUB_EVENT_PATH}
+        run: |
+          cat ${GITHUB_EVENT_PATH}
+          cp ${GITHUB_EVENT_PATH} /tmp
       - name: Test sample notification
         uses: ./
         with:
@@ -17,3 +19,8 @@ jobs:
           event_id: "Testing custom action"
           details: "Triggered from custom action repo"
           webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
+      - uses: actions/upload-artifact@master
+        if: always()
+        with:
+          name: event_payload
+          path: /tmp/event.json
