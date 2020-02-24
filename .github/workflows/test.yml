@@ -8,6 +8,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
+      - name: Check event payload
+        run: cat ${GITHUB_EVENT_PATH}
       - name: Test sample notification
         uses: ./
         with:
