@@ -35,7 +35,7 @@ export class EventPayload {
         checkBoolean(d.created, false, field + ".created");
         checkBoolean(d.deleted, false, field + ".deleted");
         checkBoolean(d.forced, false, field + ".forced");
-        checkNull(d.base_ref, field + ".base_ref");
+        checkNotNull(d.base_ref, field + ".base_ref");
         if (d.base_ref === undefined) {
             d.base_ref = null;
         }
@@ -43,7 +43,7 @@ export class EventPayload {
         checkArray(d.commits, field + ".commits");
         if (d.commits) {
             for (let i = 0; i < d.commits.length; i++) {
-                checkNull(d.commits[i], field + ".commits" + "[" + i + "]");
+                checkNotNull(d.commits[i], field + ".commits" + "[" + i + "]");
                 if (d.commits[i] === undefined) {
                     d.commits[i] = null;
                 }
@@ -52,7 +52,7 @@ export class EventPayload {
         if (d.commits === undefined) {
             d.commits = null;
         }
-        checkNull(d.head_commit, field + ".head_commit");
+        checkNotNull(d.head_commit, field + ".head_commit");
         if (d.head_commit === undefined) {
             d.head_commit = null;
         }
@@ -176,7 +176,7 @@ export class Repository {
         checkBoolean(d.private, false, field + ".private");
         d.owner = Owner.Create(d.owner, field + ".owner");
         checkString(d.html_url, false, field + ".html_url");
-        checkNull(d.description, field + ".description");
+        checkNotNull(d.description, field + ".description");
         if (d.description === undefined) {
             d.description = null;
         }
@@ -225,7 +225,7 @@ export class Repository {
         checkString(d.ssh_url, false, field + ".ssh_url");
         checkString(d.clone_url, false, field + ".clone_url");
         checkString(d.svn_url, false, field + ".svn_url");
-        checkNull(d.homepage, field + ".homepage");
+        checkNotNull(d.homepage, field + ".homepage");
         if (d.homepage === undefined) {
             d.homepage = null;
         }
@@ -239,14 +239,14 @@ export class Repository {
         checkBoolean(d.has_wiki, false, field + ".has_wiki");
         checkBoolean(d.has_pages, false, field + ".has_pages");
         checkNumber(d.forks_count, false, field + ".forks_count");
-        checkNull(d.mirror_url, field + ".mirror_url");
+        checkNotNull(d.mirror_url, field + ".mirror_url");
         if (d.mirror_url === undefined) {
             d.mirror_url = null;
         }
         checkBoolean(d.archived, false, field + ".archived");
         checkBoolean(d.disabled, false, field + ".disabled");
         checkNumber(d.open_issues_count, false, field + ".open_issues_count");
-        checkNull(d.license, field + ".license");
+        checkNotNull(d.license, field + ".license");
         if (d.license === undefined) {
             d.license = null;
         }
@@ -552,8 +552,8 @@ function checkString(d: any, nullable: boolean, field: string): void {
         errorHelper(field, d, "string", nullable);
     }
 }
-function checkNull(d: any, field: string): void {
-    if (d !== null && d !== undefined) {
+function checkNotNull(d: any, field: string): void {
+    if (d === null || d === undefined) {
         errorHelper(field, d, "null or undefined", false);
     }
 }
