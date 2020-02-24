@@ -77,7 +77,7 @@ let account;
 let message;
 let url;
 const parsedEventPayload = function parse_event_payload(event_payload) {
-    return EventPayload_1.EventPayload.Parse(JSON.stringify(event_payload));
+    return EventPayload_1.EventPayload.Parse(JSON.stringify(require(event_payload)));
 };
 const notificationMessage = function set_notification_body(eventPayload) {
     let notificationMessage;
