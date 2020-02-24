@@ -22,7 +22,7 @@ let url;
 
 
 const parsedEventPayload = function parse_event_payload(event_payload: string) : EventPayload {
-    return EventPayload.Parse(JSON.stringify(require(event_payload)));
+    return EventPayload.Parse(JSON.stringify(event_payload));
 }
 
 const notificationMessage = function set_notification_body(eventPayload: EventPayload) : NotificationMessage {
