@@ -1,3 +1,6 @@
+import {EventPayload} from './EventPayload';
+import {NotificationMessage} from './NotificationMessage';
+
 const core = require ('@actions/core');
 const path = require('path');
 const https = require('https');
@@ -6,8 +9,8 @@ const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
-const event_payload =  process.env.GITHUB_EVENT_PATH || jsonPath;
-let event_name = process.env.GITHUB_EVENT_NAME;
+const github_event_payload =  process.env.GITHUB_EVENT_PATH || jsonPath;
+const trigger_event_name = process.env.GITHUB_EVENT_NAME;
 
 let msteams_webhook_url;
 let job_status;
@@ -18,9 +21,13 @@ let message;
 let url;
 
 
-async function parse_inputs() {
-    try {
+const parsedEventPayload = function parse_event_payload(event_payload: string) : EventPayload {
+    return EventPayload.Parse(JSON.stringify(require(event_payload)));
+}
 
+const notificationMessage = function set_notification_body(eventPayload: EventPayload) : NotificationMessage {
+    let notificationMessage: NotificationMessage;
+    try {
         // do not proceed if jobs was cancelled
         job_status = core.getInput('job_status');
         if (job_status.toUpperCase() === "CANCELLED") {
@@ -30,8 +37,9 @@ async function parse_inputs() {
 
         msteams_webhook_url = core.getInput('webhook_url');
         event_id = core.getInput('event_id');
+        let event_name : string = trigger_event_name || "event";
 
-        const event_payload_data_text =  JSON.stringify(require(event_payload));
+        const event_payload_data_text =  JSON.stringify(require(github_event_payload));
         const event_payload_data = JSON.parse(event_payload_data_text);
 
         if (event_id) {
@@ -61,8 +69,8 @@ async function parse_inputs() {
                 details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
                 break;
             default:
-                if (event_name) {
-                    message = event_name.replace(/_/g, ".");
+                if (trigger_event_name) {
+                    message = trigger_event_name.replace(/_/g, ".");
                 } else {
                     message = "A GitHub Actions event has occurred"
                 }
@@ -75,10 +83,12 @@ async function parse_inputs() {
     } catch (error) {
         core.setFailed(error.message);
     }
+    notificationMessage = new NotificationMessage(account, message, url, details);
+    return notificationMessage;
 }
 
 
-async function notifyTeams() {
+async function notifyTeams(notificationMessage: NotificationMessage) {
     const matches = msteams_webhook_url.match(/^https?\:\/\/([^\/?#]+)(.*)/i);
     const hostname_match = matches && matches[1];
     const path_match = matches && matches[2];
@@ -124,5 +134,5 @@ async function notifyTeams() {
     req.end();
 }
 
-parse_inputs();
-notifyTeams();
+// set_notification_body();
+notifyTeams(notificationMessage(parsedEventPayload(github_event_payload)));
