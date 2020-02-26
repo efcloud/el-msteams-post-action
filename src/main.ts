@@ -23,6 +23,11 @@ let url;
 
 const parsedNotificationMessage = async function parse_event_to_message(event_payload_text: string): Promise<NotificationMessage> {
     let notificationMessage: NotificationMessage;
+    // let details;
+    // let account;
+    // let message;
+    // let url;
+    let parsedSchema;
     try {
         // do not proceed if job was cancelled
         job_status = core.getInput('job_status');
@@ -42,24 +47,19 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
         switch(event_name){
             case EventType.PUSH:
                 await schemaOnPush.validate(event_payload_text);
-                const parsedSchema = schemaOnPush.cast(event_payload_text);
+                parsedSchema = schemaOnPush.cast(event_payload_text);
                 account = parsedSchema.pusher.name;
+                console.log("parsed account")
                 message = `**Commit to GitHub** by ${account}`;
                 url = parsedSchema.compare;
                 details = `Comment: ${parsedSchema.head_commit.message}`;
-                // schemaOnPush.validate(event_payload_text).then(function(value) {
-                //     account = value.pusher.name;
-                //     message = `**Commit to GitHub** by ${account}`;
-                //     url = value.compare;
-                //     details = `Comment: ${value.head_commit.message}`;
-                // });
                 break;
             case EventType.PR:
-                schemaOnPullRequest.validate(event_payload_text).then(function(value) {
-                    message =  `**PR submitted to Github**: ${value.pull_request.title}`;
-                    url = value.pull_request.html_url;
-                    details = `Pr for merging ref ${value.pull_request.head.ref} to base branch ${value.base.ref}`;
-                });
+                await schemaOnPullRequest.validate(event_payload_text);
+                parsedSchema = schemaOnPullRequest.cast(event_payload_text);
+                message =  `**PR submitted to Github**: ${parsedSchema.pull_request.title}`;
+                url = parsedSchema.pull_request.html_url;
+                details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.base.ref}`;
                 break;
             case EventType.ISSUE:
                 schemaOnIssue.validate(event_payload_text).then(function(value) {

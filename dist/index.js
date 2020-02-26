@@ -438,6 +438,11 @@ let url;
 const parsedNotificationMessage = function parse_event_to_message(event_payload_text) {
     return __awaiter(this, void 0, void 0, function* () {
         let notificationMessage;
+        // let details;
+        // let account;
+        // let message;
+        // let url;
+        let parsedSchema;
         try {
             // do not proceed if job was cancelled
             job_status = core.getInput('job_status');
@@ -454,24 +459,19 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
             switch (event_name) {
                 case enums_1.EventType.PUSH:
                     yield eventPayloadSchemaBuilder_1.schemaOnPush.validate(event_payload_text);
-                    const parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPush.cast(event_payload_text);
+                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPush.cast(event_payload_text);
                     account = parsedSchema.pusher.name;
+                    console.log("parsed account");
                     message = `**Commit to GitHub** by ${account}`;
                     url = parsedSchema.compare;
                     details = `Comment: ${parsedSchema.head_commit.message}`;
-                    // schemaOnPush.validate(event_payload_text).then(function(value) {
-                    //     account = value.pusher.name;
-                    //     message = `**Commit to GitHub** by ${account}`;
-                    //     url = value.compare;
-                    //     details = `Comment: ${value.head_commit.message}`;
-                    // });
                     break;
                 case enums_1.EventType.PR:
-                    eventPayloadSchemaBuilder_1.schemaOnPullRequest.validate(event_payload_text).then(function (value) {
-                        message = `**PR submitted to Github**: ${value.pull_request.title}`;
-                        url = value.pull_request.html_url;
-                        details = `Pr for merging ref ${value.pull_request.head.ref} to base branch ${value.base.ref}`;
-                    });
+                    yield eventPayloadSchemaBuilder_1.schemaOnPullRequest.validate(event_payload_text);
+                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPullRequest.cast(event_payload_text);
+                    message = `**PR submitted to Github**: ${parsedSchema.pull_request.title}`;
+                    url = parsedSchema.pull_request.html_url;
+                    details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.base.ref}`;
                     break;
                 case enums_1.EventType.ISSUE:
                     eventPayloadSchemaBuilder_1.schemaOnIssue.validate(event_payload_text).then(function (value) {
