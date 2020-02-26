@@ -475,18 +475,28 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
                     details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
                     break;
                 case enums_1.EventType.ISSUE:
-                    eventPayloadSchemaBuilder_1.schemaOnIssue.validate(event_payload_text).then(function (value) {
-                        message = `**New/updated GitHub issue**: ${value.issue.title}`;
-                        url = value.issue.html_url;
-                        details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                    });
+                    yield eventPayloadSchemaBuilder_1.schemaOnIssue.validate(event_payload_text);
+                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssue.cast(event_payload_text);
+                    message = `**New/updated GitHub issue**: ${parsedSchema.issue.title}`;
+                    url = parsedSchema.issue.html_url;
+                    details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
+                    // schemaOnIssue.validate(event_payload_text).then(function(value) {
+                    //     message = `**New/updated GitHub issue**: ${value.issue.title}`;
+                    //     url = value.issue.html_url;
+                    //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
+                    // });
                     break;
                 case enums_1.EventType.ISSUE_COMMENT:
-                    eventPayloadSchemaBuilder_1.schemaOnIssueComment.validate(event_payload_text).then(function (value) {
-                        message = `**A Github issue comment was posted**: ${value.comment.body}`;
-                        url = value.issue.html_url;
-                        details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                    });
+                    yield eventPayloadSchemaBuilder_1.schemaOnIssueComment.validate(event_payload_text);
+                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssueComment.cast(event_payload_text);
+                    message = `**A Github issue comment was posted**: ${parsedSchema.comment.body}`;
+                    url = parsedSchema.issue.html_url;
+                    details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
+                    // schemaOnIssueComment.validate(event_payload_text).then(function(value) {
+                    //     message = `**A Github issue comment was posted**: ${value.comment.body}`;
+                    //     url = value.issue.html_url;
+                    //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
+                    // });
                     break;
                 default:
                     if (trigger_event_name) {
