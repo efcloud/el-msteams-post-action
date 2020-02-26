@@ -9,9 +9,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Check event payload
-        run: |
-#          cat ${GITHUB_EVENT_PATH}
-          cp ${GITHUB_EVENT_PATH} /tmp
+        run: cp ${GITHUB_EVENT_PATH} /tmp
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
       - name: Run unit tests
         run: npm test
       - name: Test sample notification
