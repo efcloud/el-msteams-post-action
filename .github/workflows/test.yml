@@ -1,10 +1,6 @@
 name: "Send notifications to MS Teams channel"
 
-on:
-  push:
-  pull_request:
-  issue:
-  issue_comment:
+on: [push, pull_request, issues, issue_comment]
 
 jobs:
   notify:
