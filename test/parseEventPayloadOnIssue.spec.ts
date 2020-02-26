@@ -16,6 +16,7 @@ describe('Event payload on issue', () => {
             expect(value.issue.title).to.not.be.null;
             expect(value.issue.state).to.not.be.null;
             expect(value.issue.assignee.login).to.not.be.null;
+            expect(value.sender.login).to.not.be.null;
         });
     });
 });
@@ -29,6 +30,7 @@ describe('Casting of event payload on pull request', () => {
         expect(parsedSchema.issue.title).to.eql("Spelling error in the README file");
         expect(parsedSchema.issue.state).to.eql("open");
         expect(parsedSchema.issue.assignee.login).to.eql("Codertocat");
+        expect(parsedSchema.sender.login).to.eql("Codertocat");
     });
 });
 

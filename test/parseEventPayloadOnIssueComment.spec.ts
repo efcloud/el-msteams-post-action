@@ -17,6 +17,7 @@ describe('Event payload on issue', () => {
             expect(value.issue.state).to.not.be.null;
             expect(value.issue.assignee.login).to.not.be.null;
             expect(value.comment.body).to.not.be.null;
+            expect(value.comment.user.login).to.not.be.null;
         });
     });
 });
@@ -32,5 +33,6 @@ describe('Casting of event payload on pull request', () => {
         expect(parsedSchema.issue.state).to.eql("open");
         expect(parsedSchema.issue.assignee.login).to.eql("Codertocat");
         expect(parsedSchema.comment.body).to.eql("You are totally right! I'll get this fixed right away.");
+        expect(parsedSchema.comment.user.login).to.eql("Codertocat");
     });
 });

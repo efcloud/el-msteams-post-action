@@ -470,33 +470,26 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
                 case enums_1.EventType.PR:
                     yield eventPayloadSchemaBuilder_1.schemaOnPullRequest.validate(event_payload_text);
                     parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPullRequest.cast(event_payload_text);
-                    message = `**PR submitted to Github**: ${parsedSchema.pull_request.title}`;
+                    account = parsedSchema.pull_request.user.login;
+                    message = `**PR submitted to Github** by ${account} with title: ${parsedSchema.pull_request.title}`;
                     url = parsedSchema.pull_request.html_url;
                     details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
                     break;
                 case enums_1.EventType.ISSUE:
                     yield eventPayloadSchemaBuilder_1.schemaOnIssue.validate(event_payload_text);
                     parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssue.cast(event_payload_text);
+                    account = parsedSchema.sender.login;
                     message = `**New/updated GitHub issue**: ${parsedSchema.issue.title}`;
                     url = parsedSchema.issue.html_url;
                     details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                    // schemaOnIssue.validate(event_payload_text).then(function(value) {
-                    //     message = `**New/updated GitHub issue**: ${value.issue.title}`;
-                    //     url = value.issue.html_url;
-                    //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                    // });
                     break;
                 case enums_1.EventType.ISSUE_COMMENT:
                     yield eventPayloadSchemaBuilder_1.schemaOnIssueComment.validate(event_payload_text);
                     parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssueComment.cast(event_payload_text);
+                    account = parsedSchema.sender.login;
                     message = `**A Github issue comment was posted**: ${parsedSchema.comment.body}`;
                     url = parsedSchema.issue.html_url;
                     details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                    // schemaOnIssueComment.validate(event_payload_text).then(function(value) {
-                    //     message = `**A Github issue comment was posted**: ${value.comment.body}`;
-                    //     url = value.issue.html_url;
-                    //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                    // });
                     break;
                 default:
                     if (trigger_event_name) {
@@ -4972,6 +4965,9 @@ exports.schemaOnPullRequest = yup.object().shape({
 });
 exports.schemaOnIssue = yup.object().shape({
     action: yup.string().nullable(),
+    sender: yup.object().shape({
+        login: yup.string().required()
+    }),
     issue: yup.object().shape({
         html_url: yup.string().required(),
         title: yup.string().required(),
@@ -4992,7 +4988,10 @@ exports.schemaOnIssueComment = yup.object().shape({
         })
     }),
     comment: yup.object().shape({
-        body: yup.string().required()
+        body: yup.string().required(),
+        user: yup.object().shape({
+            login: yup.string().required()
+        })
     })
 });
 

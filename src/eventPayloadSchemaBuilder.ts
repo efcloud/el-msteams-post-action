@@ -37,6 +37,9 @@ export let schemaOnPullRequest = yup.object().shape({
 
 export let schemaOnIssue = yup.object().shape({
     action: yup.string().nullable(),
+    sender: yup.object().shape ({
+        login: yup.string().required()
+    }),
     issue: yup.object().shape ({
         html_url: yup.string().required(),
         title: yup.string().required(),
@@ -58,7 +61,10 @@ export let schemaOnIssueComment = yup.object().shape({
         })
     }),
     comment: yup.object().shape ({
-        body: yup.string().required()
+        body: yup.string().required(),
+        user: yup.object().shape ({
+            login: yup.string().required()
+        })
     })
 });
 

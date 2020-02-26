@@ -59,33 +59,26 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
             case EventType.PR:
                 await schemaOnPullRequest.validate(event_payload_text);
                 parsedSchema = schemaOnPullRequest.cast(event_payload_text);
-                message =  `**PR submitted to Github**: ${parsedSchema.pull_request.title}`;
+                account = parsedSchema.pull_request.user.login;
+                message =  `**PR submitted to Github** by ${account} with title: ${parsedSchema.pull_request.title}`;
                 url = parsedSchema.pull_request.html_url;
                 details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
                 break;
             case EventType.ISSUE:
                 await schemaOnIssue.validate(event_payload_text);
                 parsedSchema = schemaOnIssue.cast(event_payload_text);
+                account = parsedSchema.sender.login;
                 message = `**New/updated GitHub issue**: ${parsedSchema.issue.title}`;
                 url = parsedSchema.issue.html_url;
                 details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                // schemaOnIssue.validate(event_payload_text).then(function(value) {
-                //     message = `**New/updated GitHub issue**: ${value.issue.title}`;
-                //     url = value.issue.html_url;
-                //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                // });
                 break;
             case EventType.ISSUE_COMMENT:
                 await schemaOnIssueComment.validate(event_payload_text);
                 parsedSchema = schemaOnIssueComment.cast(event_payload_text);
+                account = parsedSchema.sender.login;
                 message = `**A Github issue comment was posted**: ${parsedSchema.comment.body}`;
                 url = parsedSchema.issue.html_url;
                 details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                // schemaOnIssueComment.validate(event_payload_text).then(function(value) {
-                //     message = `**A Github issue comment was posted**: ${value.comment.body}`;
-                //     url = value.issue.html_url;
-                //     details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
-                // });
                 break;
             default:
                 if (trigger_event_name) {
