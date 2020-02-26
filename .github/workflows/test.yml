@@ -14,7 +14,9 @@ jobs:
         with:
           node-version: 12
       - name: Run unit tests
-        run: npm test
+        run: |
+          npm install
+          npm test
       - name: Test sample notification
         uses: ./
         with:
