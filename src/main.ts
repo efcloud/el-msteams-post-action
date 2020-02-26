@@ -1,14 +1,5 @@
-import {EventPayload} from './EventPayload';
 import {NotificationMessage} from './NotificationMessage';
 import {EventType} from "./enums";
-import {genericEventPayload, eventPayloadOnPush} from '../tmp/eventPayloadParser.ts.original';
-
-
-import {GenericEventPayload2} from "../tmp/interfaces.ts.original";
-import * as t from "io-ts";
-import { ThrowReporter } from "io-ts/lib/ThrowReporter";
-import {Either} from "fp-ts/lib/Either";
-import {Errors} from "io-ts";
 import {schemaOnIssue, schemaOnIssueComment, schemaOnPullRequest, schemaOnPush} from "./eventPayloadSchemaBuilder";
 
 const core = require ('@actions/core');
@@ -31,40 +22,6 @@ let account;
 let message;
 let url;
 
-// export function parsedEventPayload(event_payload_text: object) : object {
-//     const yupSchema = buildYup(JSON.parse(event_payload_text), { format: true, schemaType: "type-def"
-//     });
-//     return yupSchema;
-// }
-
-
-// export const parsedEventPayload = function parse_event_payload(event_payload: string) : object {
-//     const result = genericEventPayload.decode(JSON.stringify(require(event_payload)));
-//     ThrowReporter.report(result);
-//     //return genericEventPayload.decode(JSON.parse(JSON.stringify(require(github_event_payload)))).value;
-//     return result;
-// }
-
-// export function parse_event_payload(event_payload: string) : object {
-//     const result = genericEventPayload.decode(JSON.stringify(event_payload));
-//     ThrowReporter.report(result);
-//     //return genericEventPayload.decode(JSON.parse(JSON.stringify(require(github_event_payload)))).value;
-//     return result;
-// }
-
-// const parsedEventPayload = function parse_event_payload(event_payload: string) : GenericEventPayload {
-//     return JSON.parse(require(event_payload));
-// }
-
-// const parsedEventPayload = function parse_event_payload(event_payload: string) : EventPayload {
-//     return EventPayload.Parse(JSON.stringify(require(event_payload)));
-// }
-
-// const parsedEventPayload = function parse_event_payload(event_payload: string) : unknown {
-//     return typeof import(event_payload);
-// }
-
-// const notificationMessage = function set_notification_body(eventPayload: EventPayload) : NotificationMessage {
 const notificationMessage = function parse_event_to_message(event_payload_text: string) : NotificationMessage {
     let notificationMessage: NotificationMessage;
     try {
