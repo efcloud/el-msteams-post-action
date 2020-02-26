@@ -21,8 +21,6 @@ jobs:
         uses: ./
         with:
           job_status: ${{ job.status }}
-          event_id: "Testing custom action"
-          details: "Triggered from custom action repo"
           webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
       - uses: actions/upload-artifact@master
         if: always()
