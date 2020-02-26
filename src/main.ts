@@ -5,7 +5,6 @@ import {schemaOnIssue, schemaOnIssueComment, schemaOnPullRequest, schemaOnPush} 
 const core = require ('@actions/core');
 const path = require('path');
 const https = require('https');
-const { buildYup } = require('schema-to-yup');
 
 const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
@@ -22,7 +21,7 @@ let account;
 let message;
 let url;
 
-const notificationMessage = function parse_event_to_message(event_payload_text: string) : NotificationMessage {
+const parsedNotificationMessage = async function parse_event_to_message(event_payload_text: string): Promise<NotificationMessage> {
     let notificationMessage: NotificationMessage;
     try {
         // do not proceed if job was cancelled
@@ -42,12 +41,18 @@ const notificationMessage = function parse_event_to_message(event_payload_text: 
 
         switch(event_name){
             case EventType.PUSH:
-                schemaOnPush.validate(event_payload_text).then(function(value) {
-                    account = value.pusher.name;
-                    message = `**Commit to GitHub** by ${account}`;
-                    url = value.compare;
-                    details = `Comment: ${value.head_commit.message}`;
-                });
+                await schemaOnPush.validate(event_payload_text);
+                const parsedSchema = schemaOnPush.cast(event_payload_text);
+                account = parsedSchema.value.pusher.name;
+                message = `**Commit to GitHub** by ${account}`;
+                url = parsedSchema.compare;
+                details = `Comment: ${parsedSchema.head_commit.message}`;
+                // schemaOnPush.validate(event_payload_text).then(function(value) {
+                //     account = value.pusher.name;
+                //     message = `**Commit to GitHub** by ${account}`;
+                //     url = value.compare;
+                //     details = `Comment: ${value.head_commit.message}`;
+                // });
                 break;
             case EventType.PR:
                 schemaOnPullRequest.validate(event_payload_text).then(function(value) {
@@ -89,7 +94,7 @@ const notificationMessage = function parse_event_to_message(event_payload_text: 
     console.log("message is " + message);
     console.log("url is " + url);
     console.log("details is " + details);
-    notificationMessage = new NotificationMessage(account, message, url, details);
+    notificationMessage = new NotificationMessage(message, url, details);
     return notificationMessage;
 }
 
@@ -141,4 +146,15 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 // set_notification_body();
-notifyTeams(notificationMessage(JSON.stringify(require(github_event_payload))));
+
+parsedNotificationMessage(JSON.stringify(require(github_event_payload))).then(parsedMessage => {
+    notifyTeams(parsedMessage);
+});
+parsedNotificationMessage(JSON.stringify(require(github_event_payload))).catch(error => {
+    console.log('Oops', error);
+});
+// const notification = parse_event_to_message(JSON.stringify(require(github_event_payload)));
+// noinspection ES6AwaitOutsideAsyncFunction
+// @ts-ignore
+// notifyTeams(await notification);
+// notifyTeams(notificationMessage(JSON.stringify(require(github_event_payload))));

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/templates/event_payload_onIssue.json';
 import {schemaOnIssue} from '../src/eventPayloadSchemaBuilder';
+// import {notificationMessage} from "../src/main";
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on issue', () => {
@@ -30,3 +31,14 @@ describe('Casting of event payload on pull request', () => {
         expect(parsedSchema.issue.assignee.login).to.eql("Codertocat");
     });
 });
+
+// describe('Notification message to be send', () => {
+//     const notificationText = notificationMessage(event_payload_data_text);
+//
+//     it('should set all nested attributes with the expected values', () => {
+//         const parsedSchema = schemaOnIssue.cast(event_payload_data_text);
+//         expect(notificationText.getDetails()).to.eql("https://github.com/Codertocat/Hello-World/issues/1");
+//         expect(notificationText.getUrl()).to.eql("Spelling error in the README file");
+//         expect(notificationText.getMessage()).to.eql("open");
+//     });
+// });
