@@ -44,6 +44,8 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
             event_name = event_id;
         }
 
+        console.log(`Triggering tests for ${event_name}`);
+
         switch(event_name){
             case EventType.PUSH:
                 await schemaOnPush.validate(event_payload_text);
@@ -59,7 +61,7 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
                 parsedSchema = schemaOnPullRequest.cast(event_payload_text);
                 message =  `**PR submitted to Github**: ${parsedSchema.pull_request.title}`;
                 url = parsedSchema.pull_request.html_url;
-                details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.base.ref}`;
+                details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
                 break;
             case EventType.ISSUE:
                 schemaOnIssue.validate(event_payload_text).then(function(value) {
