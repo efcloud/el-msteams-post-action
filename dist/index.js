@@ -63,11 +63,11 @@ const NotificationMessage_1 = __webpack_require__(217);
 const core = __webpack_require__(357);
 const path = __webpack_require__(622);
 const https = __webpack_require__(211);
-const jsonPath = __webpack_require__.ab + "notification.json";
+const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
-const github_event_payload = process.env.GITHUB_EVENT_PATH || __webpack_require__.ab + "notification.json";
+const github_event_payload = process.env.GITHUB_EVENT_PATH || jsonPath;
 const trigger_event_name = process.env.GITHUB_EVENT_NAME;
 let msteams_webhook_url;
 let job_status;
@@ -142,7 +142,7 @@ function notifyTeams(notificationMessage) {
         const matches = msteams_webhook_url.match(/^https?\:\/\/([^\/?#]+)(.*)/i);
         const hostname_match = matches && matches[1];
         const path_match = matches && matches[2];
-        let req_data = JSON.stringify(__webpack_require__(935));
+        let req_data = JSON.stringify(__webpack_require__(57));
         req_data = req_data.replace(/GITHUB_WORKFLOW/g, `${workflow}`)
             .replace(/GITHUB_REPOSITORY/g, `${repository}`)
             .replace(/GITHUB_REF/g, `${branch}`)
@@ -181,6 +181,14 @@ function notifyTeams(notificationMessage) {
 }
 // set_notification_body();
 notifyTeams(notificationMessage(parsedEventPayload(github_event_payload)));
+
+
+/***/ }),
+
+/***/ 57:
+/***/ (function() {
+
+eval("require")("/Users/elenasalamani/Code/custom-actions/msteams/el-msteams-post-action/resources/notification.json");
 
 
 /***/ }),
@@ -1000,13 +1008,6 @@ function errorHelper(field, d, type, nullable) {
 /***/ (function(module) {
 
 module.exports = require("path");
-
-/***/ }),
-
-/***/ 935:
-/***/ (function(module) {
-
-module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1853DB","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"GITHUB_WORKFLOW\"","facts":[{"name":"Repository","value":"GITHUB_REPOSITORY"},{"name":"Branch","value":"GITHUB_REF"},{"name":"Action","value":"GITHUB_TRIGGER_EVENT"},{"name":"Details","value":"GITHUB_TRIGGER_EVENT_DETAILS"},{"name":"Url","value":"[Drilldown](GITHUB_EVENT_URL)"},{"name":"Job Status","value":"GITHUB_STATUS"}],"markdown":true}]};
 
 /***/ })
 

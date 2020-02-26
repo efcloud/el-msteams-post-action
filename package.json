@@ -4,7 +4,8 @@
   "description": "Custom github action to post notifications to MS Teams",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "mocha -r ts-node/register test/**/*.spec.ts"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,14 @@
     "jest-circus": "^24.7.1",
     "ts-jest": "^24.0.2",
     "typescript": "^3.5.1",
-    "@zeit/ncc": "0.21.1"
+    "@zeit/ncc": "0.21.1",
+    "fp-ts": "2.3.1",
+    "io-ts": "2.0.2",
+    "eslint": "^6.8.0",
+    "mocha": "^6.2.2",
+    "chai": "^4.2.0",
+    "ts-node": "^8.6.2",
+    "yup": "^0.28.1",
+    "schema-to-yup": "1.10.0"
   }
 }

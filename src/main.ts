@@ -1,11 +1,22 @@
 import {EventPayload} from './EventPayload';
 import {NotificationMessage} from './NotificationMessage';
+import {EventType} from "./enums";
+import {genericEventPayload, eventPayloadOnPush} from '../tmp/eventPayloadParser.ts.original';
+
+
+import {GenericEventPayload2} from "../tmp/interfaces.ts.original";
+import * as t from "io-ts";
+import { ThrowReporter } from "io-ts/lib/ThrowReporter";
+import {Either} from "fp-ts/lib/Either";
+import {Errors} from "io-ts";
+import {schemaOnIssue, schemaOnIssueComment, schemaOnPullRequest, schemaOnPush} from "./eventPayloadSchemaBuilder";
 
 const core = require ('@actions/core');
 const path = require('path');
 const https = require('https');
+const { buildYup } = require('schema-to-yup');
 
-const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
+const jsonPath = path.join(__dirname, 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
@@ -20,15 +31,44 @@ let account;
 let message;
 let url;
 
+// export function parsedEventPayload(event_payload_text: object) : object {
+//     const yupSchema = buildYup(JSON.parse(event_payload_text), { format: true, schemaType: "type-def"
+//     });
+//     return yupSchema;
+// }
 
-const parsedEventPayload = function parse_event_payload(event_payload: string) : EventPayload {
-    return EventPayload.Parse(JSON.stringify(require(event_payload)));
-}
 
-const notificationMessage = function set_notification_body(eventPayload: EventPayload) : NotificationMessage {
+// export const parsedEventPayload = function parse_event_payload(event_payload: string) : object {
+//     const result = genericEventPayload.decode(JSON.stringify(require(event_payload)));
+//     ThrowReporter.report(result);
+//     //return genericEventPayload.decode(JSON.parse(JSON.stringify(require(github_event_payload)))).value;
+//     return result;
+// }
+
+// export function parse_event_payload(event_payload: string) : object {
+//     const result = genericEventPayload.decode(JSON.stringify(event_payload));
+//     ThrowReporter.report(result);
+//     //return genericEventPayload.decode(JSON.parse(JSON.stringify(require(github_event_payload)))).value;
+//     return result;
+// }
+
+// const parsedEventPayload = function parse_event_payload(event_payload: string) : GenericEventPayload {
+//     return JSON.parse(require(event_payload));
+// }
+
+// const parsedEventPayload = function parse_event_payload(event_payload: string) : EventPayload {
+//     return EventPayload.Parse(JSON.stringify(require(event_payload)));
+// }
+
+// const parsedEventPayload = function parse_event_payload(event_payload: string) : unknown {
+//     return typeof import(event_payload);
+// }
+
+// const notificationMessage = function set_notification_body(eventPayload: EventPayload) : NotificationMessage {
+const notificationMessage = function parse_event_to_message(event_payload_text: string) : NotificationMessage {
     let notificationMessage: NotificationMessage;
     try {
-        // do not proceed if jobs was cancelled
+        // do not proceed if job was cancelled
         job_status = core.getInput('job_status');
         if (job_status.toUpperCase() === "CANCELLED") {
             console.log("Job was cancelled, no notification will be sent")
@@ -39,34 +79,39 @@ const notificationMessage = function set_notification_body(eventPayload: EventPa
         event_id = core.getInput('event_id');
         let event_name : string = trigger_event_name || "event";
 
-        const event_payload_data_text =  JSON.stringify(require(github_event_payload));
-        const event_payload_data = JSON.parse(event_payload_data_text);
-
         if (event_id) {
             event_name = event_id;
         }
 
         switch(event_name){
-            case 'push':
-                account = event_payload_data['pusher']['name'];
-                message = `**Commit to GitHub** by ${account}`;
-                url = event_payload_data['compare'];
-                details = `Comment: ${event_payload_data['head_commit']['message']}`;
+            case EventType.PUSH:
+                schemaOnPush.validate(event_payload_text).then(function(value) {
+                    account = value.pusher.name;
+                    message = `**Commit to GitHub** by ${account}`;
+                    url = value.compare;
+                    details = `Comment: ${value.head_commit.message}`;
+                });
                 break;
-            case 'pull_request':
-                message = `**PR submitted to Github**: ${event_payload_data['pull_request']['title']}`;
-                url = event_payload_data['pull_request']['html_url'];
-                details = `Pr for merging ref ${event_payload_data['pull_request']['head']['ref']} to base branch ${event_payload_data['base']['ref']}`;
+            case EventType.PR:
+                schemaOnPullRequest.validate(event_payload_text).then(function(value) {
+                    message =  `**PR submitted to Github**: ${value.pull_request.title}`;
+                    url = value.pull_request.html_url;
+                    details = `Pr for merging ref ${value.pull_request.head.ref} to base branch ${value.base.ref}`;
+                });
                 break;
-            case 'issue':
-                message = `**New/updated GitHub issue**: ${event_payload_data['issue']['title']}`;
-                url = event_payload_data['issue']['html_url'];
-                details = `Issue state: ${event_payload_data['issue']['state']}  - assignee: ${event_payload_data['issue']['assignee']}`;
+            case EventType.ISSUE:
+                schemaOnIssue.validate(event_payload_text).then(function(value) {
+                    message = `**New/updated GitHub issue**: ${value.issue.title}`;
+                    url = value.issue.html_url;
+                    details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
+                });
                 break;
-            case 'issue_comment':
-                message = `**A Github issue comment was posted**: ${event_payload_data['comment']['body']}`;
-                url = event_payload_data['issue']['html_url'];
-                details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
+            case EventType.ISSUE_COMMENT:
+                schemaOnIssueComment.validate(event_payload_text).then(function(value) {
+                    message = `**A Github issue comment was posted**: ${value.comment.body}`;
+                    url = value.issue.html_url;
+                    details = `Issue state: ${value.issue.state}  - assignee: ${value.issue.assignee}`;
+                });
                 break;
             default:
                 if (trigger_event_name) {
@@ -135,4 +180,4 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 // set_notification_body();
-notifyTeams(notificationMessage(parsedEventPayload(github_event_payload)));
+notifyTeams(notificationMessage(JSON.stringify(require(github_event_payload))));
