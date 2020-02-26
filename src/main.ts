@@ -76,7 +76,7 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
                 await schemaOnIssueComment.validate(event_payload_text);
                 parsedSchema = schemaOnIssueComment.cast(event_payload_text);
                 account = parsedSchema.sender.login;
-                message = `**A Github issue comment was posted**: ${parsedSchema.comment.body}`;
+                message = `**A Github issue comment was posted** by ${account} with content ${parsedSchema.comment.body}`;
                 url = parsedSchema.issue.html_url;
                 details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
                 break;
@@ -88,7 +88,6 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
                 }
                 url = `https://github.com/${repository}/actions`;
         }
-
         if (!details) {
             details = core.getInput('details');
         }

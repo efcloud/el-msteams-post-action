@@ -487,7 +487,7 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
                     yield eventPayloadSchemaBuilder_1.schemaOnIssueComment.validate(event_payload_text);
                     parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssueComment.cast(event_payload_text);
                     account = parsedSchema.sender.login;
-                    message = `**A Github issue comment was posted**: ${parsedSchema.comment.body}`;
+                    message = `**A Github issue comment was posted** by ${account} with content ${parsedSchema.comment.body}`;
                     url = parsedSchema.issue.html_url;
                     details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
                     break;
