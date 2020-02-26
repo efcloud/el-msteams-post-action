@@ -85,6 +85,10 @@ const notificationMessage = function parse_event_to_message(event_payload_text: 
     } catch (error) {
         core.setFailed(error.message);
     }
+    console.log("Account is " + account);
+    console.log("message is " + message);
+    console.log("url is " + url);
+    console.log("details is " + details);
     notificationMessage = new NotificationMessage(account, message, url, details);
     return notificationMessage;
 }
