@@ -43,7 +43,7 @@ const parsedNotificationMessage = async function parse_event_to_message(event_pa
             case EventType.PUSH:
                 await schemaOnPush.validate(event_payload_text);
                 const parsedSchema = schemaOnPush.cast(event_payload_text);
-                account = parsedSchema.value.pusher.name;
+                account = parsedSchema.pusher.name;
                 message = `**Commit to GitHub** by ${account}`;
                 url = parsedSchema.compare;
                 details = `Comment: ${parsedSchema.head_commit.message}`;
