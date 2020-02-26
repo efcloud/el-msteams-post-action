@@ -7,7 +7,7 @@ const path = require('path');
 const https = require('https');
 const { buildYup } = require('schema-to-yup');
 
-const jsonPath = path.join(__dirname, 'resources', 'notification.json');
+const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
