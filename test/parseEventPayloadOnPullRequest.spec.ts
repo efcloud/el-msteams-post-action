@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/event_payload_onPR.json';
-import {schema_on_pull_request} from '../src/eventPayloadSchemaBuilder';
+import {schemaOnPullRequest} from '../src/eventPayloadSchemaBuilder';
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on pull request', () => {
@@ -10,7 +10,7 @@ describe('Event payload on pull request', () => {
     });
 
     it('should be a valid schemaOnPullRequest', () => {
-        return schema_on_pull_request.validate(event_payload_data_text).then(function(value) {
+        return schemaOnPullRequest.validate(event_payload_data_text).then(function(value) {
             expect(value.action).to.not.be.null;
             expect(value.pull_request.html_url).to.not.be.null;
             expect(value.pull_request.title).to.not.be.null;
@@ -24,7 +24,7 @@ describe('Event payload on pull request', () => {
 });
 
 describe('Casting of event payload on pull request', () => {
-    const parsed_schema = schema_on_pull_request.cast(event_payload_data_text);
+    const parsed_schema = schemaOnPullRequest.cast(event_payload_data_text);
 
     it('should set all nested attributes with the expected values', () => {
         expect(parsed_schema.pull_request.html_url).to.eql("https://github.com/efcloud/el-msteams-post-action/pull/3");

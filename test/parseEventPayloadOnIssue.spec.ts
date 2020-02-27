@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/event_payload_onIssue.json';
-import {schema_on_issue} from '../src/eventPayloadSchemaBuilder';
+import {schemaOnIssue} from '../src/eventPayloadSchemaBuilder';
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on issue', () => {
@@ -10,7 +10,7 @@ describe('Event payload on issue', () => {
     });
 
     it('should be a valid schemaOnIssue', () => {
-        return schema_on_issue.validate(event_payload_data_text).then(function(value) {
+        return schemaOnIssue.validate(event_payload_data_text).then(function(value) {
             expect(value.issue.html_url).to.not.be.null;
             expect(value.issue.title).to.not.be.null;
             expect(value.issue.state).to.not.be.null;
@@ -21,7 +21,7 @@ describe('Event payload on issue', () => {
 });
 
 describe('Casting of event payload on pull request', () => {
-    const parsed_schema = schema_on_issue.cast(event_payload_data_text);
+    const parsed_schema = schemaOnIssue.cast(event_payload_data_text);
 
     it('should set all nested attributes with the expected values', () => {
         expect(parsed_schema.issue.html_url).to.eql("https://github.com/Codertocat/Hello-World/issues/1");

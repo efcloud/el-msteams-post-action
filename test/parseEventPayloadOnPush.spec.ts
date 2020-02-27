@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/event_payload_onPush.json';
-import {schema_on_push} from '../src/eventPayloadSchemaBuilder';
+import {schemaOnpush} from '../src/eventPayloadSchemaBuilder';
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on push', () => {
@@ -10,7 +10,7 @@ describe('Event payload on push', () => {
     });
 
     it('should be a valid schemaOnPush', () => {
-        return schema_on_push.validate(event_payload_data_text).then(function(value) {
+        return schemaOnpush.validate(event_payload_data_text).then(function(value) {
             expect(value.base_ref).to.be.null;
             expect(value.compare).to.not.be.null;
             expect(value.pusher).to.not.be.null;
@@ -21,7 +21,7 @@ describe('Event payload on push', () => {
 });
 
 describe('Casting of event payload on push', () => {
-    const parsed_schema = schema_on_push.cast(event_payload_data_text);
+    const parsed_schema = schemaOnpush.cast(event_payload_data_text);
     it('should set all attributes on first level with the expected values', () => {
         expect(parsed_schema.base_ref).to.be.null;
         expect(parsed_schema.compare).to.eql("https://github.com/efcloud/el-msteams-post-action/compare/b2b8870e14e2...9717ce415d88");

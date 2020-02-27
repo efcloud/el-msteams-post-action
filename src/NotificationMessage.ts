@@ -1,6 +1,8 @@
 export class NotificationMessage {
     public message: string;
+
     public url: string;
+
     public details: string;
 
     public constructor(message: string, url: string, details: string) {
