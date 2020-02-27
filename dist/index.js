@@ -428,30 +428,30 @@ const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
 const github_event_payload = process.env.GITHUB_EVENT_PATH || __webpack_require__.ab + "notification.json";
 const trigger_event_name = process.env.GITHUB_EVENT_NAME;
-let msteams_webhook_url;
-let job_status;
-let event_id;
-let details;
-let account;
-let message;
-let url;
-const parsedNotificationMessage = function parse_event_to_message(event_payload_text) {
+const msteams_webhook_url = core.getInput('webhook_url');
+const job_status = core.getInput('job_status');
+const event_id = core.getInput('event_id');
+// let details;
+// let account;
+// let message;
+// let url;
+exports.parsedNotificationMessage = function parse_event_to_message(event_payload_text) {
     return __awaiter(this, void 0, void 0, function* () {
-        let notificationMessage;
-        // let details;
-        // let account;
-        // let message;
-        // let url;
+        // let notificationMessage: NotificationMessage;
+        let details;
+        let account;
+        let message;
+        let url;
         let parsedSchema;
         try {
             // do not proceed if job was cancelled
-            job_status = core.getInput('job_status');
+            // job_status = core.getInput('job_status');
             if (job_status.toUpperCase() === "CANCELLED") {
                 console.log("Job was cancelled, no notification will be sent");
                 process.exit(0);
             }
-            msteams_webhook_url = core.getInput('webhook_url');
-            event_id = core.getInput('event_id');
+            // msteams_webhook_url = core.getInput('webhook_url');
+            // event_id = core.getInput('event_id');
             let event_name = trigger_event_name || "event";
             if (event_id) {
                 event_name = event_id;
@@ -462,7 +462,6 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
                     yield eventPayloadSchemaBuilder_1.schemaOnPush.validate(event_payload_text);
                     parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPush.cast(event_payload_text);
                     account = parsedSchema.pusher.name;
-                    console.log("parsed account");
                     message = `**Commit to GitHub** by ${account}`;
                     url = parsedSchema.compare;
                     details = `Comment: ${parsedSchema.head_commit.message}`;
@@ -493,10 +492,10 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
                     break;
                 default:
                     if (trigger_event_name) {
-                        message = trigger_event_name.replace(/_/g, ".");
+                        message = trigger_event_name.replace(/_/g, "-");
                     }
                     else {
-                        message = "A GitHub Actions event has occurred";
+                        message = "An action has been triggered on github";
                     }
                     url = `https://github.com/${repository}/actions`;
             }
@@ -507,12 +506,7 @@ const parsedNotificationMessage = function parse_event_to_message(event_payload_
         catch (error) {
             core.setFailed(error.message);
         }
-        console.log("Account is " + account);
-        console.log("message is " + message);
-        console.log("url is " + url);
-        console.log("details is " + details);
-        notificationMessage = new NotificationMessage_1.NotificationMessage(message, url, details);
-        return notificationMessage;
+        return new NotificationMessage_1.NotificationMessage(message, url, details);
     });
 };
 function notifyTeams(notificationMessage) {
@@ -524,9 +518,9 @@ function notifyTeams(notificationMessage) {
         req_data = req_data.replace(/GITHUB_WORKFLOW/g, `${workflow}`)
             .replace(/GITHUB_REPOSITORY/g, `${repository}`)
             .replace(/GITHUB_REF/g, `${branch}`)
-            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${details}`)
-            .replace(/GITHUB_TRIGGER_EVENT/g, `${message}`)
-            .replace(/GITHUB_EVENT_URL/g, `${url}`)
+            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.getDetails()}`)
+            .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.getMessage()}`)
+            .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.getUrl()}`)
             .replace(/GITHUB_STATUS/g, `${job_status}`);
         const options = {
             hostname: `${hostname_match}`,
@@ -557,18 +551,12 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-// set_notification_body();
-parsedNotificationMessage(JSON.stringify(require(github_event_payload))).then(parsedMessage => {
+exports.parsedNotificationMessage(JSON.stringify(require(github_event_payload))).then((parsedMessage) => {
     notifyTeams(parsedMessage);
 });
-parsedNotificationMessage(JSON.stringify(require(github_event_payload))).catch(error => {
+exports.parsedNotificationMessage(JSON.stringify(require(github_event_payload))).catch(error => {
     console.log('Oops', error);
 });
-// const notification = parse_event_to_message(JSON.stringify(require(github_event_payload)));
-// noinspection ES6AwaitOutsideAsyncFunction
-// @ts-ignore
-// notifyTeams(await notification);
-// notifyTeams(notificationMessage(JSON.stringify(require(github_event_payload))));
 
 
 /***/ }),
