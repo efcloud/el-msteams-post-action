@@ -51,7 +51,7 @@ module.exports = require("os");
 /***/ }),
 
 /***/ 147:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
@@ -64,6 +64,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+const enums_1 = __webpack_require__(710);
 const core = __webpack_require__(670);
 const path = __webpack_require__(622);
 const https = __webpack_require__(211);
@@ -97,23 +99,23 @@ function parse_inputs() {
                 event_name = event_id;
             }
             switch (event_name) {
-                case 'push':
+                case enums_1.EventType.PUSH:
                     account = event_payload_data['pusher']['name'];
                     message = `**Commit to GitHub** by ${account}`;
                     url = event_payload_data['compare'];
                     details = `Comment: ${event_payload_data['head_commit']['message']}`;
                     break;
-                case 'pull_request':
+                case enums_1.EventType.PULL_REQUEST:
                     message = `**PR submitted to Github**: ${event_payload_data['pull_request']['title']}`;
                     url = event_payload_data['pull_request']['html_url'];
                     details = `Pr for merging ref ${event_payload_data['pull_request']['head']['ref']} to base branch ${event_payload_data['base']['ref']}`;
                     break;
-                case 'issue':
+                case enums_1.EventType.ISSUE:
                     message = `**New/updated GitHub issue**: ${event_payload_data['issue']['title']}`;
                     url = event_payload_data['issue']['html_url'];
                     details = `Issue state: ${event_payload_data['issue']['state']}  - assignee: ${event_payload_data['issue']['assignee']}`;
                     break;
-                case 'issue_comment':
+                case enums_1.EventType.ISSUE_COMMENT:
                     message = `**A Github issue comment was posted**: ${event_payload_data['comment']['body']}`;
                     url = event_payload_data['issue']['html_url'];
                     details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
@@ -470,6 +472,23 @@ function escape(s) {
         .replace(/;/g, '%3B');
 }
 //# sourceMappingURL=command.js.map
+
+/***/ }),
+
+/***/ 710:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var EventType;
+(function (EventType) {
+    EventType["PUSH"] = "push";
+    EventType["PULL_REQUEST"] = "pull_request";
+    EventType["ISSUE"] = "issue";
+    EventType["ISSUE_COMMENT"] = "issue_comment";
+})(EventType = exports.EventType || (exports.EventType = {}));
+
 
 /***/ }),
 

@@ -1,3 +1,5 @@
+import {EventType} from "./enums";
+
 const core = require ('@actions/core');
 const path = require('path');
 const https = require('https');
@@ -39,23 +41,23 @@ async function parse_inputs() {
         }
 
         switch(event_name){
-            case 'push':
+            case EventType.PUSH:
                 account = event_payload_data['pusher']['name'];
                 message = `**Commit to GitHub** by ${account}`;
                 url = event_payload_data['compare'];
                 details = `Comment: ${event_payload_data['head_commit']['message']}`;
                 break;
-            case 'pull_request':
+            case EventType.PULL_REQUEST:
                 message = `**PR submitted to Github**: ${event_payload_data['pull_request']['title']}`;
                 url = event_payload_data['pull_request']['html_url'];
                 details = `Pr for merging ref ${event_payload_data['pull_request']['head']['ref']} to base branch ${event_payload_data['base']['ref']}`;
                 break;
-            case 'issue':
+            case EventType.ISSUE:
                 message = `**New/updated GitHub issue**: ${event_payload_data['issue']['title']}`;
                 url = event_payload_data['issue']['html_url'];
                 details = `Issue state: ${event_payload_data['issue']['state']}  - assignee: ${event_payload_data['issue']['assignee']}`;
                 break;
-            case 'issue_comment':
+            case EventType.ISSUE_COMMENT:
                 message = `**A Github issue comment was posted**: ${event_payload_data['comment']['body']}`;
                 url = event_payload_data['issue']['html_url'];
                 details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
