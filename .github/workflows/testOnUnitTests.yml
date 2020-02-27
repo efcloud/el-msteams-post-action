@@ -1,6 +1,6 @@
 name: "Unit tests"
 
-on: [issue_comment]
+on: [push]
 
 jobs:
   notify:
