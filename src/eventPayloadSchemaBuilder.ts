@@ -1,6 +1,6 @@
 const yup = require('yup');
 
-export let schemaOnPush = yup.object().shape({
+export let schema_on_push = yup.object().shape({
     base_ref: yup.string().nullable(),
     compare: yup.string().required(),
     pusher: yup.object().shape ({
@@ -16,7 +16,7 @@ export let schemaOnPush = yup.object().shape({
     })
 });
 
-export let schemaOnPullRequest = yup.object().shape({
+export let schema_on_pull_request = yup.object().shape({
     action: yup.string().nullable(),
     pull_request: yup.object().shape ({
         html_url: yup.string().required(),
@@ -35,7 +35,7 @@ export let schemaOnPullRequest = yup.object().shape({
     })
 });
 
-export let schemaOnIssue = yup.object().shape({
+export let schema_on_issue = yup.object().shape({
     action: yup.string().nullable(),
     sender: yup.object().shape ({
         login: yup.string().required()
@@ -50,7 +50,7 @@ export let schemaOnIssue = yup.object().shape({
     })
 });
 
-export let schemaOnIssueComment = yup.object().shape({
+export let schema_on_issue_comment = yup.object().shape({
     action: yup.string().nullable(),
     issue: yup.object().shape ({
         html_url: yup.string().required(),

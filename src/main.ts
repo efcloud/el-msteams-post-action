@@ -1,23 +1,23 @@
 import {NotificationMessage} from './NotificationMessage';
 import {EventType} from "./enums";
-import {schemaOnIssue, schemaOnIssueComment, schemaOnPullRequest, schemaOnPush} from "./eventPayloadSchemaBuilder";
+import {schema_on_issue, schema_on_issue_comment, schema_on_pull_request, schema_on_push} from "./eventPayloadSchemaBuilder";
 
 const core = require ('@actions/core');
 const path = require('path');
 const https = require('https');
 
-const jsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
+const default_json_path = path.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
-const github_event_payload =  process.env.GITHUB_EVENT_PATH || jsonPath;
+const github_event_payload =  process.env.GITHUB_EVENT_PATH || default_json_path;
 const trigger_event_name = process.env.GITHUB_EVENT_NAME;
 
 const msteams_webhook_url = core.getInput('webhook_url');
 const job_status = core.getInput('job_status');
 const event_id = core.getInput('event_id');
 
-export const parsedNotificationMessage = async function parse_event_to_message(event_payload_text: string): Promise<NotificationMessage> {
+export const parsed_notification_message = async function parse_event_to_message(event_payload_text: string): Promise<NotificationMessage> {
     let details;
     let account;
     let message;
@@ -36,32 +36,32 @@ export const parsedNotificationMessage = async function parse_event_to_message(e
 
         switch(event_name){
             case EventType.PUSH:
-                await schemaOnPush.validate(event_payload_text);
-                parsedSchema = schemaOnPush.cast(event_payload_text);
+                await schema_on_push.validate(event_payload_text);
+                parsedSchema = schema_on_push.cast(event_payload_text);
                 account = parsedSchema.pusher.name;
                 message = `**Commit to GitHub** by ${account}`;
                 url = parsedSchema.compare;
                 details = `Comment: ${parsedSchema.head_commit.message}`;
                 break;
             case EventType.PULL_REQUEST:
-                await schemaOnPullRequest.validate(event_payload_text);
-                parsedSchema = schemaOnPullRequest.cast(event_payload_text);
+                await schema_on_pull_request.validate(event_payload_text);
+                parsedSchema = schema_on_pull_request.cast(event_payload_text);
                 account = parsedSchema.pull_request.user.login;
                 message =  `**PR submitted to Github** by ${account} with title: ${parsedSchema.pull_request.title}`;
                 url = parsedSchema.pull_request.html_url;
                 details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
                 break;
             case EventType.ISSUE:
-                await schemaOnIssue.validate(event_payload_text);
-                parsedSchema = schemaOnIssue.cast(event_payload_text);
+                await schema_on_issue.validate(event_payload_text);
+                parsedSchema = schema_on_issue.cast(event_payload_text);
                 account = parsedSchema.sender.login;
                 message = `**New/updated GitHub issue**: ${parsedSchema.issue.title}`;
                 url = parsedSchema.issue.html_url;
                 details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
                 break;
             case EventType.ISSUE_COMMENT:
-                await schemaOnIssueComment.validate(event_payload_text);
-                parsedSchema = schemaOnIssueComment.cast(event_payload_text);
+                await schema_on_issue_comment.validate(event_payload_text);
+                parsedSchema = schema_on_issue_comment.cast(event_payload_text);
                 account = parsedSchema.sender.login;
                 message = `**A Github issue comment was posted** by ${account} with content ${parsedSchema.comment.body}`;
                 url = parsedSchema.issue.html_url;
@@ -86,12 +86,12 @@ export const parsedNotificationMessage = async function parse_event_to_message(e
 }
 
 
-async function notifyTeams(notificationMessage: NotificationMessage) {
+async function notify_teams(notificationMessage: NotificationMessage) {
     const matches = msteams_webhook_url.match(/^https?\:\/\/([^\/?#]+)(.*)/i);
     const hostname_match = matches && matches[1];
     const path_match = matches && matches[2];
 
-    let req_data = JSON.stringify(require(jsonPath));
+    let req_data = JSON.stringify(require(default_json_path));
     req_data  = req_data.replace(/GITHUB_WORKFLOW/g, `${workflow}`)
                         .replace(/GITHUB_REPOSITORY/g, `${repository}`)
                         .replace(/GITHUB_REF/g, `${branch}`)
@@ -132,6 +132,6 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     req.end();
 }
 
-parsedNotificationMessage(JSON.stringify(require(github_event_payload))).then((parsedMessage: NotificationMessage) => {
-    notifyTeams(parsedMessage);
+parsed_notification_message(JSON.stringify(require(github_event_payload))).then((parsedMessage: NotificationMessage) => {
+    notify_teams(parsedMessage);
 });

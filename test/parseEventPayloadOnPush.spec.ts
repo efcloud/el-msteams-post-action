@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/event_payload_onPush.json';
-import {schemaOnPush} from '../src/eventPayloadSchemaBuilder';
+import {schema_on_push} from '../src/eventPayloadSchemaBuilder';
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on push', () => {
@@ -10,7 +10,7 @@ describe('Event payload on push', () => {
     });
 
     it('should be a valid schemaOnPush', () => {
-        return schemaOnPush.validate(event_payload_data_text).then(function(value) {
+        return schema_on_push.validate(event_payload_data_text).then(function(value) {
             expect(value.base_ref).to.be.null;
             expect(value.compare).to.not.be.null;
             expect(value.pusher).to.not.be.null;
@@ -21,22 +21,21 @@ describe('Event payload on push', () => {
 });
 
 describe('Casting of event payload on push', () => {
-    const parsedSchema = schemaOnPush.cast(event_payload_data_text);
+    const parsed_schema = schema_on_push.cast(event_payload_data_text);
     it('should set all attributes on first level with the expected values', () => {
-        expect(parsedSchema.base_ref).to.be.null;
-        expect(parsedSchema.compare).to.eql("https://github.com/efcloud/el-msteams-post-action/compare/b2b8870e14e2...9717ce415d88");
+        expect(parsed_schema.base_ref).to.be.null;
+        expect(parsed_schema.compare).to.eql("https://github.com/efcloud/el-msteams-post-action/compare/b2b8870e14e2...9717ce415d88");
     });
 
     it('should set all nested attributes with the expected values', () => {
-        const parsedSchema = schemaOnPush.cast(event_payload_data_text);
-        expect(parsedSchema.base_ref).to.be.null;
-        expect(parsedSchema.compare).to.eql("https://github.com/efcloud/el-msteams-post-action/compare/b2b8870e14e2...9717ce415d88");
-        expect(parsedSchema.pusher.email).to.eql("54802933+eleni-salamani@users.noreply.github.com");
-        expect(parsedSchema.pusher.name).to.eql("eleni-salamani");
-        expect(parsedSchema.head_commit.message).to.eql("Try to return the event payload as separate artifact in job");
-        expect(parsedSchema.head_commit.url).to.eql("https://github.com/efcloud/el-msteams-post-action/commit/9717ce415d885594b699d3ab63ffb26a4ae48043");
-        expect(parsedSchema.head_commit.id).to.eql("9717ce415d885594b699d3ab63ffb26a4ae48043");
-        expect(parsedSchema.head_commit.author.email).to.eql("eleni.salamani@ef.com");
-        expect(parsedSchema.head_commit.committer.name).to.eql("Eleni Salamani");
+        expect(parsed_schema.base_ref).to.be.null;
+        expect(parsed_schema.compare).to.eql("https://github.com/efcloud/el-msteams-post-action/compare/b2b8870e14e2...9717ce415d88");
+        expect(parsed_schema.pusher.email).to.eql("54802933+eleni-salamani@users.noreply.github.com");
+        expect(parsed_schema.pusher.name).to.eql("eleni-salamani");
+        expect(parsed_schema.head_commit.message).to.eql("Try to return the event payload as separate artifact in job");
+        expect(parsed_schema.head_commit.url).to.eql("https://github.com/efcloud/el-msteams-post-action/commit/9717ce415d885594b699d3ab63ffb26a4ae48043");
+        expect(parsed_schema.head_commit.id).to.eql("9717ce415d885594b699d3ab63ffb26a4ae48043");
+        expect(parsed_schema.head_commit.author.email).to.eql("eleni.salamani@ef.com");
+        expect(parsed_schema.head_commit.committer.name).to.eql("Eleni Salamani");
     });
 });
