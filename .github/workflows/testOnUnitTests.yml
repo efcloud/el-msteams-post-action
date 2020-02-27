@@ -1,0 +1,21 @@
+name: "Unit tests"
+
+on: [issue_comment]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Run unit tests
+        run: |
+          npm install
+          npm test
+      - name: Test sample notification
+        uses: ./
+        with:
+          job_status: ${{ job.status }}
+          event_id: "Unit test execution"
+          details: "Triggered from custom action repo"
+          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}

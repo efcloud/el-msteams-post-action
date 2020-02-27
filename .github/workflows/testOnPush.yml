@@ -1,4 +1,4 @@
-name: "Send notifications to MS Teams channel"
+name: "Send notifications to MS Teams channel - on push"
 
 on: [push]
 
@@ -12,6 +12,4 @@ jobs:
         uses: ./
         with:
           job_status: ${{ job.status }}
-          event_id: "Testing custom action"
-          details: "Triggered from custom action repo"
           webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
