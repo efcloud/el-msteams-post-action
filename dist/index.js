@@ -34,7 +34,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(903);
+/******/ 		return __webpack_require__(147);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -43,7 +43,162 @@ module.exports =
 /************************************************************************/
 /******/ ({
 
-/***/ 1:
+/***/ 87:
+/***/ (function(module) {
+
+module.exports = require("os");
+
+/***/ }),
+
+/***/ 147:
+/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+const core = __webpack_require__(670);
+const path = __webpack_require__(622);
+const https = __webpack_require__(211);
+const jsonPath = __webpack_require__.ab + "notification.json";
+const workflow = process.env.GITHUB_WORKFLOW;
+const repository = process.env.GITHUB_REPOSITORY;
+const branch = process.env.GITHUB_REF;
+const event_payload = process.env.GITHUB_EVENT_PATH || __webpack_require__.ab + "notification.json";
+let event_name = process.env.GITHUB_EVENT_NAME;
+let msteams_webhook_url;
+let job_status;
+let event_id;
+let details;
+let account;
+let message;
+let url;
+function parse_inputs() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // do not proceed if jobs was cancelled
+            job_status = core.getInput('job_status');
+            if (job_status.toUpperCase() === "CANCELLED") {
+                console.log("Job was cancelled, no notification will be sent");
+                process.exit(0);
+            }
+            msteams_webhook_url = core.getInput('webhook_url');
+            event_id = core.getInput('event_id');
+            const event_payload_data_text = JSON.stringify(require(event_payload));
+            const event_payload_data = JSON.parse(event_payload_data_text);
+            if (event_id) {
+                event_name = event_id;
+            }
+            switch (event_name) {
+                case 'push':
+                    account = event_payload_data['pusher']['name'];
+                    message = `**Commit to GitHub** by ${account}`;
+                    url = event_payload_data['compare'];
+                    details = `Comment: ${event_payload_data['head_commit']['message']}`;
+                    break;
+                case 'pull_request':
+                    message = `**PR submitted to Github**: ${event_payload_data['pull_request']['title']}`;
+                    url = event_payload_data['pull_request']['html_url'];
+                    details = `Pr for merging ref ${event_payload_data['pull_request']['head']['ref']} to base branch ${event_payload_data['base']['ref']}`;
+                    break;
+                case 'issue':
+                    message = `**New/updated GitHub issue**: ${event_payload_data['issue']['title']}`;
+                    url = event_payload_data['issue']['html_url'];
+                    details = `Issue state: ${event_payload_data['issue']['state']}  - assignee: ${event_payload_data['issue']['assignee']}`;
+                    break;
+                case 'issue_comment':
+                    message = `**A Github issue comment was posted**: ${event_payload_data['comment']['body']}`;
+                    url = event_payload_data['issue']['html_url'];
+                    details = `Issue state: ${event_payload_data['issue']['state']} - assignee: ${event_payload_data['issue']['assignee']}`;
+                    break;
+                default:
+                    if (event_name) {
+                        message = event_name.replace(/_/g, ".");
+                    }
+                    else {
+                        message = "A GitHub Actions event has occurred";
+                    }
+                    url = `https://github.com/${repository}/actions`;
+            }
+            if (!details) {
+                details = core.getInput('details');
+            }
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
+function notifyTeams() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const matches = msteams_webhook_url.match(/^https?\:\/\/([^\/?#]+)(.*)/i);
+        const hostname_match = matches && matches[1];
+        const path_match = matches && matches[2];
+        let req_data = JSON.stringify(__webpack_require__(847));
+        req_data = req_data.replace(/GITHUB_WORKFLOW/g, `${workflow}`)
+            .replace(/GITHUB_REPOSITORY/g, `${repository}`)
+            .replace(/GITHUB_REF/g, `${branch}`)
+            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${details}`)
+            .replace(/GITHUB_TRIGGER_EVENT/g, `${message}`)
+            .replace(/GITHUB_EVENT_URL/g, `${url}`)
+            .replace(/GITHUB_STATUS/g, `${job_status}`);
+        const options = {
+            hostname: `${hostname_match}`,
+            port: 443,
+            path: `${path_match}`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': req_data.length
+            }
+        };
+        const req = https.request(options, (res) => {
+            if (res.statusCode >= 400) {
+                core.setFailed(`Action failed with status code  ${res.statusCode}`);
+            }
+            else {
+                console.log(`statusCode: ${res.statusCode}`);
+            }
+            res.on('data', (d) => {
+                process.stdout.write(d);
+            });
+        });
+        req.on('error', (error) => {
+            console.error(error);
+            core.setFailed(`Action failed with error ${error}`);
+        });
+        req.write(req_data);
+        req.end();
+    });
+}
+parse_inputs();
+notifyTeams();
+
+
+/***/ }),
+
+/***/ 211:
+/***/ (function(module) {
+
+module.exports = require("https");
+
+/***/ }),
+
+/***/ 622:
+/***/ (function(module) {
+
+module.exports = require("path");
+
+/***/ }),
+
+/***/ 670:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -58,7 +213,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(341);
+const command_1 = __webpack_require__(703);
 const os = __webpack_require__(87);
 const path = __webpack_require__(622);
 /**
@@ -245,28 +400,7 @@ exports.getState = getState;
 
 /***/ }),
 
-/***/ 87:
-/***/ (function(module) {
-
-module.exports = require("os");
-
-/***/ }),
-
-/***/ 211:
-/***/ (function(module) {
-
-module.exports = require("https");
-
-/***/ }),
-
-/***/ 279:
-/***/ (function(module) {
-
-module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1853DB","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"GITHUB_WORKFLOW\"","facts":[{"name":"Repository","value":"GITHUB_REPOSITORY"},{"name":"Branch","value":"GITHUB_REF"},{"name":"Action","value":"GITHUB_TRIGGER_EVENT"},{"name":"Details","value":"GITHUB_TRIGGER_EVENT_DETAILS"},{"name":"Url","value":"[Drilldown](GITHUB_EVENT_URL)"},{"name":"Job Status","value":"GITHUB_STATUS"}],"markdown":true}]};
-
-/***/ }),
-
-/***/ 341:
+/***/ 703:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -339,144 +473,10 @@ function escape(s) {
 
 /***/ }),
 
-/***/ 622:
+/***/ 847:
 /***/ (function(module) {
 
-module.exports = require("path");
-
-/***/ }),
-
-/***/ 903:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-const core = __webpack_require__(1);
-const path = __webpack_require__(622);
-const https = __webpack_require__(211);
-const jsonPath = __webpack_require__.ab + "notification.json";
-const workflow = process.env.GITHUB_WORKFLOW;
-const repository = process.env.GITHUB_REPOSITORY;
-const branch = process.env.GITHUB_REF;
-const event_payload = process.env.GITHUB_EVENT_PATH || __webpack_require__.ab + "notification.json";
-let event_name = process.env.GITHUB_EVENT_NAME;
-let msteams_webhook_url;
-let job_status;
-let event_id;
-let details;
-let account;
-let message;
-let url;
-function parse_inputs() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            // do not proceed if jobs was cancelled
-            job_status = core.getInput('job_status');
-            if (job_status.toUpperCase() === "CANCELLED") {
-                console.log("Job was cancelled, no notification will be sent");
-                process.exit(0);
-            }
-            msteams_webhook_url = core.getInput('webhook_url');
-            event_id = core.getInput('event_id');
-            const event_payload_data = JSON.stringify(require(event_payload));
-            const event_payload_data_text = JSON.parse(event_payload_data);
-            if (event_id) {
-                event_name = event_id;
-            }
-            switch (event_name) {
-                case 'push':
-                    account = event_payload_data_text['pusher']['name'];
-                    message = `**Commit to GitHub** by ${account}`;
-                    url = event_payload_data_text['compare'];
-                    details = `Comment: ${event_payload_data_text['head_commit']['message']}`;
-                    break;
-                case 'pull_request':
-                    message = `**PR submitted to Github**: ${event_payload_data_text['pull_request']['title']}`;
-                    url = event_payload_data_text['pull_request']['html_url'];
-                    details = `Pr for merging ref ${event_payload_data_text['pull_request']['head']['ref']} to base branch ${event_payload_data_text['base']['ref']}`;
-                    break;
-                case 'issue':
-                    message = `**New/updated GitHub issue**: ${event_payload_data_text['issue']['title']}`;
-                    url = event_payload_data_text['issue']['html_url'];
-                    details = `Issue state: ${event_payload_data_text['issue']['state']}  - assignee: ${event_payload_data_text['issue']['assignee']}`;
-                    break;
-                case 'issue_comment':
-                    message = `**A Github issue comment was posted**: ${event_payload_data_text['comment']['body']}`;
-                    url = event_payload_data_text['issue']['html_url'];
-                    details = `Issue state: ${event_payload_data_text['issue']['state']} - assignee: ${event_payload_data_text['issue']['assignee']}`;
-                    break;
-                default:
-                    if (event_name) {
-                        message = event_name.replace(/_/g, ".");
-                    }
-                    else {
-                        message = "A GitHub Actions event has occurred";
-                    }
-                    url = `https://github.com/${repository}/actions`;
-            }
-            if (!details) {
-                details = core.getInput('details');
-            }
-        }
-        catch (error) {
-            core.setFailed(error.message);
-        }
-    });
-}
-function notifyTeams() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const matches = msteams_webhook_url.match(/^https?\:\/\/([^\/?#]+)(.*)/i);
-        const hostname_match = matches && matches[1];
-        const path_match = matches && matches[2];
-        let req_data = JSON.stringify(__webpack_require__(279));
-        req_data = req_data.replace(/GITHUB_WORKFLOW/g, `${workflow}`)
-            .replace(/GITHUB_REPOSITORY/g, `${repository}`)
-            .replace(/GITHUB_REF/g, `${branch}`)
-            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${details}`)
-            .replace(/GITHUB_TRIGGER_EVENT/g, `${message}`)
-            .replace(/GITHUB_EVENT_URL/g, `${url}`)
-            .replace(/GITHUB_STATUS/g, `${job_status}`);
-        const options = {
-            hostname: `${hostname_match}`,
-            port: 443,
-            path: `${path_match}`,
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': req_data.length
-            }
-        };
-        const req = https.request(options, (res) => {
-            if (res.statusCode >= 400) {
-                core.setFailed(`Action failed with status code  ${res.statusCode}`);
-            }
-            else {
-                console.log(`statusCode: ${res.statusCode}`);
-            }
-            res.on('data', (d) => {
-                process.stdout.write(d);
-            });
-        });
-        req.on('error', (error) => {
-            console.error(error);
-            core.setFailed(`Action failed with error ${error}`);
-        });
-        req.write(req_data);
-        req.end();
-    });
-}
-parse_inputs();
-notifyTeams();
-
+module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1853DB","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"GITHUB_WORKFLOW\"","facts":[{"name":"Repository","value":"GITHUB_REPOSITORY"},{"name":"Branch","value":"GITHUB_REF"},{"name":"Action","value":"GITHUB_TRIGGER_EVENT"},{"name":"Details","value":"GITHUB_TRIGGER_EVENT_DETAILS"},{"name":"Url","value":"[Drilldown](GITHUB_EVENT_URL)"},{"name":"Job Status","value":"GITHUB_STATUS"}],"markdown":true}]};
 
 /***/ })
 
