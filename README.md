@@ -69,3 +69,14 @@ jobs:
 The generated notifications will look as follows:
 
 ## ![img](./resources/notifications.png)
+
+### Development
+
+If you wish to update this repo, we suggest the following process
+
+1. Clone the repo locally
+2. Install all dependencies with `npm install`
+3. Install ncc with `npm install -g @zeit/ncc` (-g if of course you wish to install the package globally)
+4. Make your modifications and compile the code with `npm run build`
+5. Compile the project into a single file with `ncc build lib/main.js`
+6. Commit the src/, dist/ and test/ folders, as required. 
