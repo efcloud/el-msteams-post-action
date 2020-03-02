@@ -1,33 +1,33 @@
 import { expect } from 'chai';
 import 'mocha';
 import data from '../src/resources/event_payload_onIssue.json';
-import {schemaOnIssue} from '../src/eventPayloadSchemaBuilder';
+import {schemaOnIssue, schemaOnIssueComment} from '../src/eventPayloadSchemaBuilder';
 const event_payload_data_text =  JSON.stringify(data);
 
 describe('Event payload on issue', () => {
+    const parsed_schema = schemaOnIssue.validateSync(event_payload_data_text);
+
     it('should not be an empty string', () => {
         expect(event_payload_data_text.length).to.be.greaterThan(0);
     });
 
-    it('should be a valid schemaOnIssue', () => {
-        return schemaOnIssue.validate(event_payload_data_text).then(function(value) {
-            expect(value.issue.html_url).to.not.be.null;
-            expect(value.issue.title).to.not.be.null;
-            expect(value.issue.state).to.not.be.null;
-            expect(value.issue.assignee.login).to.not.be.null;
-            expect(value.sender.login).to.not.be.null;
-        });
-    });
-});
-
-describe('Casting of event payload on pull request', () => {
-    const parsed_schema = schemaOnIssue.cast(event_payload_data_text);
-
-    it('should set all nested attributes with the expected values', () => {
+    it('should include the expected issue.html_url value', () => {
         expect(parsed_schema.issue.html_url).to.eql("https://github.com/Codertocat/Hello-World/issues/1");
+    });
+
+    it('should include the expected issue.title value', () => {
         expect(parsed_schema.issue.title).to.eql("Spelling error in the README file");
+    });
+
+    it('should include the expected issue.state value', () => {
         expect(parsed_schema.issue.state).to.eql("open");
+    });
+
+    it('should include the expected issue.assignee.login value', () => {
         expect(parsed_schema.issue.assignee.login).to.eql("Codertocat");
+    });
+
+    it('should include the expected sender.login value', () => {
         expect(parsed_schema.sender.login).to.eql("Codertocat");
     });
 });
