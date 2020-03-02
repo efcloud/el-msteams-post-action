@@ -12,3 +12,9 @@ export enum ThemeColor {
     GREEN = '5D985E',
     RED = 'AD362F'
 }
+
+export enum JobStatus {
+    SUCCESS = 'SUCCESS',
+    FAILURE = 'FAILURE',
+    CANCELLED = 'CANCELLED'
+}

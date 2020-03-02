@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { ValidationError } from 'yup';
 import { NotificationMessage } from './NotificationMessage';
-import { EventType, ThemeColor } from './enums';
+import {EventType, JobStatus, ThemeColor} from './enums';
 import {
     schemaOnIssue,
     schemaOnIssueComment,
@@ -101,9 +101,9 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
 
-    if (core.getInput('job_status').toUpperCase() === 'PASSED') {
+    if (core.getInput('job_status').toUpperCase() === JobStatus.SUCCESS) {
         requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.GREEN);
-    } else if (core.getInput('job_status').toUpperCase() === 'FAILED') {
+    } else if (core.getInput('job_status').toUpperCase() === JobStatus.FAILURE) {
         requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.RED);
     } else {
         requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.BLUE);
@@ -141,7 +141,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     req.end();
 }
 
-if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
+if (core.getInput('job_status').toUpperCase() !== JobStatus.CANCELLED) {
     const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);

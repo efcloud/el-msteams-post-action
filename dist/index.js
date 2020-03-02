@@ -1473,10 +1473,10 @@ function notifyTeams(notificationMessage) {
             .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
             .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
             .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
-        if (core.getInput('job_status').toUpperCase() === 'PASSED') {
+        if (core.getInput('job_status').toUpperCase() === enums_1.JobStatus.SUCCESS) {
             requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.GREEN);
         }
-        else if (core.getInput('job_status').toUpperCase() === 'FAILED') {
+        else if (core.getInput('job_status').toUpperCase() === enums_1.JobStatus.FAILURE) {
             requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.RED);
         }
         else {
@@ -1511,7 +1511,7 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
+if (core.getInput('job_status').toUpperCase() !== enums_1.JobStatus.CANCELLED) {
     const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
@@ -9331,6 +9331,12 @@ var ThemeColor;
     ThemeColor["GREEN"] = "5D985E";
     ThemeColor["RED"] = "AD362F";
 })(ThemeColor = exports.ThemeColor || (exports.ThemeColor = {}));
+var JobStatus;
+(function (JobStatus) {
+    JobStatus["SUCCESS"] = "SUCCESS";
+    JobStatus["FAILURE"] = "FAILURE";
+    JobStatus["CANCELLED"] = "CANCELLED";
+})(JobStatus = exports.JobStatus || (exports.JobStatus = {}));
 
 
 /***/ }),
