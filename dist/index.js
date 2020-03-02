@@ -1473,6 +1473,15 @@ function notifyTeams(notificationMessage) {
             .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
             .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
             .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
+        if (core.getInput('job_status').toUpperCase() === 'PASSED') {
+            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.GREEN);
+        }
+        else if (core.getInput('job_status').toUpperCase() === 'FAILED') {
+            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.RED);
+        }
+        else {
+            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.BLUE);
+        }
         const options = {
             hostname: `${hostnameMatch}`,
             port: 443,
@@ -5197,7 +5206,7 @@ module.exports = baseMatches;
 /* 422 */
 /***/ (function(module) {
 
-module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1853DB","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"GITHUB_WORKFLOW\"","facts":[{"name":"Repository","value":"GITHUB_REPOSITORY"},{"name":"Branch","value":"GITHUB_REF"},{"name":"Action","value":"GITHUB_TRIGGER_EVENT"},{"name":"Details","value":"GITHUB_TRIGGER_EVENT_DETAILS"},{"name":"Url","value":"[Drilldown](GITHUB_EVENT_URL)"},{"name":"Job Status","value":"GITHUB_STATUS"}],"markdown":true}]};
+module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"THEME_COLOR","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"GITHUB_WORKFLOW\"","facts":[{"name":"Repository","value":"GITHUB_REPOSITORY"},{"name":"Branch","value":"GITHUB_REF"},{"name":"Action","value":"GITHUB_TRIGGER_EVENT"},{"name":"Details","value":"GITHUB_TRIGGER_EVENT_DETAILS"},{"name":"Url","value":"[Drilldown](GITHUB_EVENT_URL)"},{"name":"Job Status","value":"GITHUB_STATUS"}],"markdown":true}]};
 
 /***/ }),
 /* 423 */,
@@ -9316,6 +9325,12 @@ var EventType;
     EventType["ISSUE"] = "issue";
     EventType["ISSUE_COMMENT"] = "issue_comment";
 })(EventType = exports.EventType || (exports.EventType = {}));
+var ThemeColor;
+(function (ThemeColor) {
+    ThemeColor["BLUE"] = "1853DB";
+    ThemeColor["GREEN"] = "5D985E";
+    ThemeColor["RED"] = "AD362F";
+})(ThemeColor = exports.ThemeColor || (exports.ThemeColor = {}));
 
 
 /***/ }),

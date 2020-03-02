@@ -6,3 +6,9 @@ export enum EventType {
     ISSUE = 'issue',
     ISSUE_COMMENT = 'issue_comment'
 }
+
+export enum ThemeColor {
+    BLUE = '1853DB',
+    GREEN = '5D985E',
+    RED = 'AD362F'
+}

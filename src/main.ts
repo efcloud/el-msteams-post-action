@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { ValidationError } from 'yup';
 import { NotificationMessage } from './NotificationMessage';
-import { EventType } from './enums';
+import { EventType, ThemeColor } from './enums';
 import {
     schemaOnIssue,
     schemaOnIssueComment,
@@ -100,6 +100,14 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
+
+    if (core.getInput('job_status').toUpperCase() === 'PASSED') {
+        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.GREEN);
+    } else if (core.getInput('job_status').toUpperCase() === 'FAILED') {
+        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.RED);
+    } else {
+        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.BLUE);
+    }
 
     const options = {
         hostname: `${hostnameMatch}`,
