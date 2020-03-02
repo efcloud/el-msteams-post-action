@@ -774,7 +774,7 @@ module.exports = Hash;
 var DataView = __webpack_require__(550),
     Map = __webpack_require__(278),
     Promise = __webpack_require__(72),
-    Set = __webpack_require__(421),
+    Set = __webpack_require__(710),
     WeakMap = __webpack_require__(351),
     baseGetTag = __webpack_require__(699),
     toSource = __webpack_require__(229);
@@ -1381,7 +1381,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const enums_1 = __webpack_require__(710);
+/* eslint-disable no-unused-vars */
+const yup_1 = __webpack_require__(437);
+const enums_1 = __webpack_require__(798);
 const eventPayloadSchemaBuilder_1 = __webpack_require__(822);
 const notification_json_1 = __importDefault(__webpack_require__(422));
 const core = __webpack_require__(670);
@@ -1443,8 +1445,14 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
         }
     }
     catch (error) {
-        core.setFailed(error.message);
-        return process.exit(1);
+        let errorDetails;
+        if (error instanceof yup_1.ValidationError) {
+            errorDetails = error.errors;
+        }
+        else {
+            errorDetails = error.message;
+        }
+        return core.setFailed(`ERROR : ${errorDetails}`);
     }
 };
 function notifyTeams(notificationMessage) {
@@ -1495,7 +1503,13 @@ function notifyTeams(notificationMessage) {
     });
 }
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    notifyTeams(exports.parsedNotificationMessage(JSON.stringify(githubEventPayload)));
+    const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
+    if (eventNotification) {
+        notifyTeams(eventNotification);
+    }
+    else {
+        core.setFailed('ERROR: Notification message not built correctly - Aborting');
+    }
 }
 else {
     core.warn('Job was cancelled, no notification will be sent');
@@ -5179,19 +5193,7 @@ module.exports = baseMatches;
 /* 418 */,
 /* 419 */,
 /* 420 */,
-/* 421 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-var getNative = __webpack_require__(507),
-    root = __webpack_require__(183);
-
-/* Built-in method references that are verified to be native. */
-var Set = getNative(root, 'Set');
-
-module.exports = Set;
-
-
-/***/ }),
+/* 421 */,
 /* 422 */
 /***/ (function(module) {
 
@@ -8624,19 +8626,15 @@ module.exports = _extends;
 /* 708 */,
 /* 709 */,
 /* 710 */
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-"use strict";
+var getNative = __webpack_require__(507),
+    root = __webpack_require__(183);
 
-/* eslint-disable no-unused-vars */
-Object.defineProperty(exports, "__esModule", { value: true });
-var EventType;
-(function (EventType) {
-    EventType["PUSH"] = "push";
-    EventType["PULL_REQUEST"] = "pull_request";
-    EventType["ISSUE"] = "issue";
-    EventType["ISSUE_COMMENT"] = "issue_comment";
-})(EventType = exports.EventType || (exports.EventType = {}));
+/* Built-in method references that are verified to be native. */
+var Set = getNative(root, 'Set');
+
+module.exports = Set;
 
 
 /***/ }),
@@ -9304,7 +9302,23 @@ module.exports = exports["default"];
 /* 795 */,
 /* 796 */,
 /* 797 */,
-/* 798 */,
+/* 798 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+/* eslint-disable no-unused-vars */
+Object.defineProperty(exports, "__esModule", { value: true });
+var EventType;
+(function (EventType) {
+    EventType["PUSH"] = "push";
+    EventType["PULL_REQUEST"] = "pull_request";
+    EventType["ISSUE"] = "issue";
+    EventType["ISSUE_COMMENT"] = "issue_comment";
+})(EventType = exports.EventType || (exports.EventType = {}));
+
+
+/***/ }),
 /* 799 */,
 /* 800 */,
 /* 801 */,

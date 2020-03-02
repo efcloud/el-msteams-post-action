@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { ValidationError } from 'yup';
 import { NotificationMessage } from './NotificationMessage';
 import { EventType } from './enums';
 import {
@@ -21,7 +22,7 @@ const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const githubEventPayload = require(githubEventPayloadFile);
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
 
-export const parsedNotificationMessage = function parseEventToMessage(eventPayloadText: string): NotificationMessage {
+export const parsedNotificationMessage = function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
     let account;
     let parsedSchema;
     try {
@@ -70,8 +71,13 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
                 };
         }
     } catch (error) {
-        core.setFailed(error.message);
-        return process.exit(1);
+        let errorDetails;
+        if (error instanceof ValidationError) {
+            errorDetails = error.errors;
+        } else {
+            errorDetails = error.message;
+        }
+        return core.setFailed(`ERROR : ${errorDetails}`);
     }
 };
 
@@ -128,7 +134,12 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    notifyTeams(parsedNotificationMessage(JSON.stringify(githubEventPayload)));
+    const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
+    if (eventNotification) {
+        notifyTeams(eventNotification);
+    } else {
+        core.setFailed('ERROR: Notification message not built correctly - Aborting');
+    }
 } else {
     core.warn('Job was cancelled, no notification will be sent');
     process.exit(0);
