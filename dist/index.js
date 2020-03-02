@@ -1381,7 +1381,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const NotificationMessage_1 = __webpack_require__(425);
 const enums_1 = __webpack_require__(710);
 const eventPayloadSchemaBuilder_1 = __webpack_require__(822);
 const notification_json_1 = __importDefault(__webpack_require__(422));
@@ -1395,80 +1394,66 @@ const branch = process.env.GITHUB_REF;
 const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const githubEventPayload = require(githubEventPayloadFile);
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
-const msteamsWebhookUrl = core.getInput('webhook_url');
-const jobStatus = core.getInput('job_status');
-const eventId = core.getInput('event_id');
 exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadText) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let details;
-        let account;
-        let message;
-        let url;
-        let parsedSchema;
-        try {
-            if (jobStatus.toUpperCase() === 'CANCELLED') {
-                core.warn('Job was cancelled, no notification will be sent');
-                process.exit(0);
-            }
-            let eventName = triggerEventName || 'event';
-            if (eventId) {
-                eventName = eventId;
-            }
-            switch (eventName) {
-                case enums_1.EventType.PUSH:
-                    yield eventPayloadSchemaBuilder_1.schemaOnpush.validate(eventPayloadText);
-                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnpush.cast(eventPayloadText);
-                    account = parsedSchema.pusher.name;
-                    message = `**Commit to GitHub** by ${account}`;
-                    url = parsedSchema.compare;
-                    details = `Comment: ${parsedSchema.head_commit.message}`;
-                    break;
-                case enums_1.EventType.PULL_REQUEST:
-                    yield eventPayloadSchemaBuilder_1.schemaOnPullRequest.validate(eventPayloadText);
-                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPullRequest.cast(eventPayloadText);
-                    account = parsedSchema.pull_request.user.login;
-                    message = `**PR submitted to Github** by ${account} with title: ${parsedSchema.pull_request.title}`;
-                    url = parsedSchema.pull_request.html_url;
-                    details = `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`;
-                    break;
-                case enums_1.EventType.ISSUE:
-                    yield eventPayloadSchemaBuilder_1.schemaOnIssue.validate(eventPayloadText);
-                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssue.cast(eventPayloadText);
-                    account = parsedSchema.sender.login;
-                    message = `**New/updated GitHub issue**: ${parsedSchema.issue.title}`;
-                    url = parsedSchema.issue.html_url;
-                    details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                    break;
-                case enums_1.EventType.ISSUE_COMMENT:
-                    yield eventPayloadSchemaBuilder_1.schemaOnIssueComment.validate(eventPayloadText);
-                    parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssueComment.cast(eventPayloadText);
-                    account = parsedSchema.sender.login;
-                    message = `**A Github issue comment was posted** by ${account} with content ${parsedSchema.comment.body}`;
-                    url = parsedSchema.issue.html_url;
-                    details = `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`;
-                    break;
-                default:
-                    if (eventName) {
-                        message = eventName.replace(/_/g, '.');
-                    }
-                    else {
-                        message = 'A GitHub Actions event has occurred';
-                    }
-                    url = `https://github.com/${repository}/actions`;
-            }
-            if (!details) {
-                details = core.getInput('details');
-            }
+    let account;
+    let parsedSchema;
+    try {
+        let eventName = triggerEventName || 'event';
+        if (core.getInput('event_id')) {
+            eventName = core.getInput('event_id');
         }
-        catch (error) {
-            core.setFailed(error.message);
+        switch (eventName) {
+            case enums_1.EventType.PUSH:
+                parsedSchema = eventPayloadSchemaBuilder_1.schemaOnpush.validateSync(eventPayloadText);
+                account = parsedSchema.pusher.name;
+                return {
+                    message: `**Commit to GitHub** by ${account}`,
+                    url: parsedSchema.compare,
+                    details: `Comment: ${parsedSchema.head_commit.message}`
+                };
+            case enums_1.EventType.PULL_REQUEST:
+                parsedSchema = eventPayloadSchemaBuilder_1.schemaOnPullRequest.validateSync(eventPayloadText);
+                account = parsedSchema.pull_request.user.login;
+                return {
+                    message: `**PR submitted to Github** by ${account} with title: ${parsedSchema.pull_request.title}`,
+                    url: parsedSchema.pull_request.html_url,
+                    details: `Pr for merging ref ${parsedSchema.pull_request.head.ref} to base branch ${parsedSchema.pull_request.base.ref}`
+                };
+            case enums_1.EventType.ISSUE:
+                parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssue.validateSync(eventPayloadText);
+                account = parsedSchema.sender.login;
+                return {
+                    message: `**New/updated GitHub issue**: ${parsedSchema.issue.title}`,
+                    url: parsedSchema.issue.html_url,
+                    details: `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`
+                };
+            case enums_1.EventType.ISSUE_COMMENT:
+                parsedSchema = eventPayloadSchemaBuilder_1.schemaOnIssueComment.validateSync(eventPayloadText);
+                return {
+                    message: `**A Github issue comment was posted** by ${account} with content ${parsedSchema.comment.body}`,
+                    url: parsedSchema.issue.html_url,
+                    details: `Issue state: ${parsedSchema.issue.state}  - assignee: ${parsedSchema.issue.assignee}`
+                };
+            default:
+                return {
+                    message: eventName ? eventName.replace(/_/g, '.') : 'A GitHub Actions event has occurred',
+                    url: `https://github.com/${repository}/actions`,
+                    details: core.getInput('details')
+                };
         }
-        return new NotificationMessage_1.NotificationMessage(message, url, details);
-    });
+    }
+    catch (error) {
+        core.setFailed(error.message);
+        return process.exit(1);
+    }
 };
 function notifyTeams(notificationMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        const matches = msteamsWebhookUrl.match(/^https?:\/\/([^/?#]+)(.*)/i);
+        if (!(core.getInput('webhook_url'))) {
+            core.setFailed('Error : Webhook URL configuration is missing. Aborting');
+            process.exit(1);
+        }
+        const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
         const hostnameMatch = matches && matches[1];
         const pathMatch = matches && matches[2];
         let requestBodyData = JSON.stringify(notification_json_1.default);
@@ -1476,10 +1461,10 @@ function notifyTeams(notificationMessage) {
             .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
             .replace(/GITHUB_REPOSITORY/g, `${repository}`)
             .replace(/GITHUB_REF/g, `${branch}`)
-            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.getDetails()}`)
-            .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.getMessage()}`)
-            .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.getUrl()}`)
-            .replace(/GITHUB_STATUS/g, `${jobStatus}`);
+            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
+            .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
+            .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
+            .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
         const options = {
             hostname: `${hostnameMatch}`,
             port: 443,
@@ -1509,9 +1494,13 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-exports.parsedNotificationMessage(JSON.stringify(githubEventPayload)).then((parsedMessage) => {
-    notifyTeams(parsedMessage);
-});
+if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
+    notifyTeams(exports.parsedNotificationMessage(JSON.stringify(githubEventPayload)));
+}
+else {
+    core.warn('Job was cancelled, no notification will be sent');
+    process.exit(0);
+}
 
 
 /***/ }),
@@ -5211,32 +5200,7 @@ module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions
 /***/ }),
 /* 423 */,
 /* 424 */,
-/* 425 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-class NotificationMessage {
-    constructor(message, url, details) {
-        this.message = message;
-        this.url = url;
-        this.details = details;
-    }
-    getMessage() {
-        return this.message;
-    }
-    getUrl() {
-        return this.url;
-    }
-    getDetails() {
-        return this.details;
-    }
-}
-exports.NotificationMessage = NotificationMessage;
-
-
-/***/ }),
+/* 425 */,
 /* 426 */,
 /* 427 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
