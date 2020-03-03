@@ -1501,7 +1501,7 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-if (!core.getInput('job_status').equals(constants_1.jobStatus.CANCELLED.status)) {
+if (core.getInput('job_status') !== constants_1.jobStatus.CANCELLED.status) {
     const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
