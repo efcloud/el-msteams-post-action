@@ -1451,6 +1451,8 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
 };
 const notificationBody = function getNotificationBody(notificationMessage) {
     const themeColorByJobStatus = `jobStatus.${core.getInput('job_status')}.themeColor`;
+    console.log(`TEST: ${themeColorByJobStatus}`);
+    console.log(themeColorByJobStatus);
     let requestBodyData = JSON.stringify(notification_json_1.default);
     requestBodyData = requestBodyData
         .replace(/GITHUB_WORKFLOW/g, `${constants_1.workflow}`)

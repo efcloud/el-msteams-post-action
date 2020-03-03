@@ -84,6 +84,8 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
 
 const notificationBody = function getNotificationBody(notificationMessage: NotificationMessage) : string {
     const themeColorByJobStatus = `jobStatus.${core.getInput('job_status')}.themeColor`;
+    console.log(`TEST: ${themeColorByJobStatus}`);
+    console.log(themeColorByJobStatus);
     let requestBodyData = JSON.stringify(notificationTemplate);
     requestBodyData = requestBodyData
         .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
