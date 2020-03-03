@@ -84,8 +84,9 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
 
 const notificationBody = function getNotificationBody(notificationMessage: NotificationMessage) : string {
     const themeColorByJobStatus = `jobStatus.${core.getInput('job_status').toLowerCase()}.themeColor`;
-    console.log(`TEST: ${themeColorByJobStatus}`);
-    console.log(themeColorByJobStatus);
+    // console.log(`TEST: ${themeColorByJobStatus}`);
+    // console.log(themeColorByJobStatus);
+    // // console.log(`${`${themeColorByJobStatus}`}`);
     let requestBodyData = JSON.stringify(notificationTemplate);
     requestBodyData = requestBodyData
         .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
@@ -95,7 +96,7 @@ const notificationBody = function getNotificationBody(notificationMessage: Notif
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
-        .replace(/THEME_COLOR/g, `${themeColorByJobStatus}`);
+        .replace(/THEME_COLOR/g, themeColorByJobStatus);
     return requestBodyData;
 };
 
@@ -143,8 +144,6 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 if (core.getInput('job_status') !== jobStatus.cancelled.status) {
-    console.log(`TEST2: ${jobStatus.cancelled.status}`);
-    console.log(jobStatus.cancelled.status);
     const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
