@@ -1450,7 +1450,7 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
     }
 };
 const notificationBody = function getNotificationBody(notificationMessage) {
-    const themeColorByJobStatus = `jobStatus.${core.getInput('job_status')}.themeColor`;
+    const themeColorByJobStatus = `jobStatus.${core.getInput('job_status').toLowerCase()}.themeColor`;
     console.log(`TEST: ${themeColorByJobStatus}`);
     console.log(themeColorByJobStatus);
     let requestBodyData = JSON.stringify(notification_json_1.default);

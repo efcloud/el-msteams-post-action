@@ -83,7 +83,7 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
 };
 
 const notificationBody = function getNotificationBody(notificationMessage: NotificationMessage) : string {
-    const themeColorByJobStatus = `jobStatus.${core.getInput('job_status')}.themeColor`;
+    const themeColorByJobStatus = `jobStatus.${core.getInput('job_status').toLowerCase()}.themeColor`;
     console.log(`TEST: ${themeColorByJobStatus}`);
     console.log(themeColorByJobStatus);
     let requestBodyData = JSON.stringify(notificationTemplate);
