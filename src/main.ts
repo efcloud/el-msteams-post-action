@@ -84,7 +84,7 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
 
 const notificationBody = function getNotificationBody(notificationMessage: NotificationMessage) : string {
     const status = core.getInput('job_status').toLowerCase();
-    console.log(`TEST: ${`jobStatus.${status}.themeColor`}`);
+    console.log(`TEST: ${jobStatus[status].themeColor}`);
     let requestBodyData = JSON.stringify(notificationTemplate);
     requestBodyData = requestBodyData
         .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
@@ -94,7 +94,7 @@ const notificationBody = function getNotificationBody(notificationMessage: Notif
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
-        .replace(/THEME_COLOR/g, `${`jobStatus.${status}.themeColor`}`);
+        .replace(/THEME_COLOR/g, `${jobStatus[status].themeColor}`);
     return requestBodyData;
 };
 
