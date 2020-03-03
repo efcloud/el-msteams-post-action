@@ -8,8 +8,8 @@ export const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJs
 export const triggerEventName = process.env.GITHUB_EVENT_NAME;
 
 export const jobStatus = {
-    SUCCESS: { status: 'success', themeColor: '5D985E' },
-    FAILURE: { status: 'failure', themeColor: 'AD362F' },
-    ALWAYS: { status: 'always', themeColor: '1853DB' },
-    CANCELLED: { status: 'cancelled', themeColor: 'FB9A5B' }
+    success: { status: 'success', themeColor: '5D985E' },
+    failure: { status: 'failure', themeColor: 'AD362F' },
+    always: { status: 'always', themeColor: '1853DB' },
+    cancelled: { status: 'cancelled', themeColor: 'FB9A5B' }
 };

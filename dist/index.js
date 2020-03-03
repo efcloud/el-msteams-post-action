@@ -1501,7 +1501,7 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-if (core.getInput('job_status') !== constants_1.jobStatus.CANCELLED.status) {
+if (core.getInput('job_status') !== constants_1.jobStatus.cancelled.status) {
     const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
@@ -6223,10 +6223,10 @@ exports.branch = process.env.GITHUB_REF;
 exports.githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || exports.defaultJsonPath;
 exports.triggerEventName = process.env.GITHUB_EVENT_NAME;
 exports.jobStatus = {
-    SUCCESS: { status: 'success', themeColor: '5D985E' },
-    FAILURE: { status: 'failure', themeColor: 'AD362F' },
-    ALWAYS: { status: 'always', themeColor: '1853DB' },
-    CANCELLED: { status: 'cancelled', themeColor: 'FB9A5B' }
+    success: { status: 'success', themeColor: '5D985E' },
+    failure: { status: 'failure', themeColor: 'AD362F' },
+    always: { status: 'always', themeColor: '1853DB' },
+    cancelled: { status: 'cancelled', themeColor: 'FB9A5B' }
 };
 
 

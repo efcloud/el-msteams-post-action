@@ -139,7 +139,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     req.end();
 }
 
-if (core.getInput('job_status') !== jobStatus.CANCELLED.status) {
+if (core.getInput('job_status') !== jobStatus.cancelled.status) {
     const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
