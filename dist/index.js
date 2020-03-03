@@ -1505,6 +1505,8 @@ function notifyTeams(notificationMessage) {
     });
 }
 if (core.getInput('job_status') !== constants_1.jobStatus.cancelled.status) {
+    console.log(`TEST2: ${constants_1.jobStatus.cancelled.status}`);
+    console.log(constants_1.jobStatus.cancelled.status);
     const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
