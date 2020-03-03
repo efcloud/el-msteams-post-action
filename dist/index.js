@@ -1450,6 +1450,7 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
     }
 };
 const notificationBody = function getNotificationBody(notificationMessage) {
+    const themeColorByJobStatus = `jobStatus.${core.getInput('job_status')}.themeColor`;
     let requestBodyData = JSON.stringify(notification_json_1.default);
     requestBodyData = requestBodyData
         .replace(/GITHUB_WORKFLOW/g, `${constants_1.workflow}`)
@@ -1459,7 +1460,7 @@ const notificationBody = function getNotificationBody(notificationMessage) {
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
-        .replace(/THEME_COLOR/g, `${constants_1.jobStatus.success.themeColor}`);
+        .replace(/THEME_COLOR/g, `${themeColorByJobStatus}`);
     return requestBodyData;
 };
 function notifyTeams(notificationMessage) {
