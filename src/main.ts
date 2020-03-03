@@ -1,26 +1,27 @@
 /* eslint-disable no-unused-vars */
 import { ValidationError } from 'yup';
 import { NotificationMessage } from './NotificationMessage';
-import {EventType, JobStatus, ThemeColor} from './enums';
+import { EventType } from './enums';
 import {
     schemaOnIssue,
     schemaOnIssueComment,
     schemaOnPullRequest,
     schemaOnpush
 } from './eventPayloadSchemaBuilder';
+import {
+    branch,
+    githubEventPayloadFile,
+    jobStatus,
+    repository,
+    triggerEventName,
+    workflow
+} from './constants';
 import notificationTemplate from './resources/notification.json';
 
-const core = require('@actions/core');
-const path = require('path');
 const https = require('https');
+const core = require('@actions/core');
 
-const defaultJsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
-const workflow = process.env.GITHUB_WORKFLOW;
-const repository = process.env.GITHUB_REPOSITORY;
-const branch = process.env.GITHUB_REF;
-const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const githubEventPayload = require(githubEventPayloadFile);
-const triggerEventName = process.env.GITHUB_EVENT_NAME;
 
 export const parsedNotificationMessage = function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
     let account;
@@ -81,6 +82,19 @@ export const parsedNotificationMessage = function parseEventToMessage(eventPaylo
     }
 };
 
+const notificationBody = function getNotificationBody(notificationMessage: NotificationMessage) : string {
+    let requestBodyData = JSON.stringify(notificationTemplate);
+    requestBodyData = requestBodyData
+        .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
+        .replace(/GITHUB_REPOSITORY/g, `${repository}`)
+        .replace(/GITHUB_REF/g, `${branch}`)
+        .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
+        .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
+        .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
+        .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
+        .replace(/THEME_COLOR/g, `jobStatus.${core.getInput('job_status')}.themeColor`);
+    return requestBodyData;
+};
 
 async function notifyTeams(notificationMessage: NotificationMessage) {
     if (!(core.getInput('webhook_url'))) {
@@ -91,23 +105,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     const hostnameMatch = matches && matches[1];
     const pathMatch = matches && matches[2];
 
-    let requestBodyData = JSON.stringify(notificationTemplate);
-    requestBodyData = requestBodyData
-        .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
-        .replace(/GITHUB_REPOSITORY/g, `${repository}`)
-        .replace(/GITHUB_REF/g, `${branch}`)
-        .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
-        .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
-        .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
-        .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
-
-    if (core.getInput('job_status').toUpperCase() === JobStatus.SUCCESS) {
-        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.GREEN);
-    } else if (core.getInput('job_status').toUpperCase() === JobStatus.FAILURE) {
-        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.RED);
-    } else {
-        requestBodyData = requestBodyData.replace(/THEME_COLOR/g, ThemeColor.BLUE);
-    }
+    const requestBodyData = notificationBody(notificationMessage);
 
     const options = {
         hostname: `${hostnameMatch}`,
@@ -141,7 +139,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     req.end();
 }
 
-if (core.getInput('job_status').toUpperCase() !== JobStatus.CANCELLED) {
+if (!core.getInput('job_status').equals(jobStatus.CANCELLED.status)) {
     const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);

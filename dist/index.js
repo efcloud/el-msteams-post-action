@@ -1385,22 +1385,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const yup_1 = __webpack_require__(437);
 const enums_1 = __webpack_require__(798);
 const eventPayloadSchemaBuilder_1 = __webpack_require__(822);
+const constants_1 = __webpack_require__(573);
 const notification_json_1 = __importDefault(__webpack_require__(422));
-const core = __webpack_require__(670);
-const path = __webpack_require__(622);
 const https = __webpack_require__(211);
-const defaultJsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
-const workflow = process.env.GITHUB_WORKFLOW;
-const repository = process.env.GITHUB_REPOSITORY;
-const branch = process.env.GITHUB_REF;
-const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
-const githubEventPayload = require(githubEventPayloadFile);
-const triggerEventName = process.env.GITHUB_EVENT_NAME;
+const core = __webpack_require__(670);
+const githubEventPayload = require(constants_1.githubEventPayloadFile);
 exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadText) {
     let account;
     let parsedSchema;
     try {
-        let eventName = triggerEventName || 'event';
+        let eventName = constants_1.triggerEventName || 'event';
         if (core.getInput('event_id')) {
             eventName = core.getInput('event_id');
         }
@@ -1439,7 +1433,7 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
             default:
                 return {
                     message: eventName ? eventName.replace(/_/g, '.') : 'A GitHub Actions event has occurred',
-                    url: `https://github.com/${repository}/actions`,
+                    url: `https://github.com/${constants_1.repository}/actions`,
                     details: core.getInput('details')
                 };
         }
@@ -1455,6 +1449,19 @@ exports.parsedNotificationMessage = function parseEventToMessage(eventPayloadTex
         return core.setFailed(`ERROR : ${errorDetails}`);
     }
 };
+const notificationBody = function getNotificationBody(notificationMessage) {
+    let requestBodyData = JSON.stringify(notification_json_1.default);
+    requestBodyData = requestBodyData
+        .replace(/GITHUB_WORKFLOW/g, `${constants_1.workflow}`)
+        .replace(/GITHUB_REPOSITORY/g, `${constants_1.repository}`)
+        .replace(/GITHUB_REF/g, `${constants_1.branch}`)
+        .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
+        .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
+        .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
+        .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
+        .replace(/THEME_COLOR/g, `jobStatus.${core.getInput('job_status')}.themeColor`);
+    return requestBodyData;
+};
 function notifyTeams(notificationMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(core.getInput('webhook_url'))) {
@@ -1464,24 +1471,7 @@ function notifyTeams(notificationMessage) {
         const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
         const hostnameMatch = matches && matches[1];
         const pathMatch = matches && matches[2];
-        let requestBodyData = JSON.stringify(notification_json_1.default);
-        requestBodyData = requestBodyData
-            .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
-            .replace(/GITHUB_REPOSITORY/g, `${repository}`)
-            .replace(/GITHUB_REF/g, `${branch}`)
-            .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
-            .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
-            .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
-            .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
-        if (core.getInput('job_status').toUpperCase() === enums_1.JobStatus.SUCCESS) {
-            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.GREEN);
-        }
-        else if (core.getInput('job_status').toUpperCase() === enums_1.JobStatus.FAILURE) {
-            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.RED);
-        }
-        else {
-            requestBodyData = requestBodyData.replace(/THEME_COLOR/g, enums_1.ThemeColor.BLUE);
-        }
+        const requestBodyData = notificationBody(notificationMessage);
         const options = {
             hostname: `${hostnameMatch}`,
             port: 443,
@@ -1511,7 +1501,7 @@ function notifyTeams(notificationMessage) {
         req.end();
     });
 }
-if (core.getInput('job_status').toUpperCase() !== enums_1.JobStatus.CANCELLED) {
+if (!core.getInput('job_status').equals(constants_1.jobStatus.CANCELLED.status)) {
     const eventNotification = exports.parsedNotificationMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
@@ -6219,7 +6209,28 @@ module.exports = unicodeToArray;
 /* 570 */,
 /* 571 */,
 /* 572 */,
-/* 573 */,
+/* 573 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const path = __webpack_require__(622);
+exports.defaultJsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
+exports.workflow = process.env.GITHUB_WORKFLOW;
+exports.repository = process.env.GITHUB_REPOSITORY;
+exports.branch = process.env.GITHUB_REF;
+exports.githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || exports.defaultJsonPath;
+exports.triggerEventName = process.env.GITHUB_EVENT_NAME;
+exports.jobStatus = {
+    SUCCESS: { status: 'success', themeColor: '5D985E' },
+    FAILURE: { status: 'failure', themeColor: 'AD362F' },
+    ALWAYS: { status: 'always', themeColor: '1853DB' },
+    CANCELLED: { status: 'cancelled', themeColor: 'FB9A5B' }
+};
+
+
+/***/ }),
 /* 574 */,
 /* 575 */,
 /* 576 */,
@@ -9325,18 +9336,6 @@ var EventType;
     EventType["ISSUE"] = "issue";
     EventType["ISSUE_COMMENT"] = "issue_comment";
 })(EventType = exports.EventType || (exports.EventType = {}));
-var ThemeColor;
-(function (ThemeColor) {
-    ThemeColor["BLUE"] = "1853DB";
-    ThemeColor["GREEN"] = "5D985E";
-    ThemeColor["RED"] = "AD362F";
-})(ThemeColor = exports.ThemeColor || (exports.ThemeColor = {}));
-var JobStatus;
-(function (JobStatus) {
-    JobStatus["SUCCESS"] = "SUCCESS";
-    JobStatus["FAILURE"] = "FAILURE";
-    JobStatus["CANCELLED"] = "CANCELLED";
-})(JobStatus = exports.JobStatus || (exports.JobStatus = {}));
 
 
 /***/ }),
