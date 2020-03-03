@@ -1459,7 +1459,7 @@ const notificationBody = function getNotificationBody(notificationMessage) {
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
-        .replace(/THEME_COLOR/g, `jobStatus.${core.getInput('job_status')}.themeColor`);
+        .replace(/THEME_COLOR/g, `${constants_1.jobStatus.success.themeColor}`);
     return requestBodyData;
 };
 function notifyTeams(notificationMessage) {

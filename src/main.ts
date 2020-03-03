@@ -92,7 +92,7 @@ const notificationBody = function getNotificationBody(notificationMessage: Notif
         .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
         .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
         .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`)
-        .replace(/THEME_COLOR/g, `jobStatus.${core.getInput('job_status')}.themeColor`);
+        .replace(/THEME_COLOR/g, `${jobStatus.success.themeColor}`);
     return requestBodyData;
 };
 
