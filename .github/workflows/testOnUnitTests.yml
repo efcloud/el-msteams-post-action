@@ -13,6 +13,7 @@ jobs:
           npm install
           npm test
       - name: Test sample notification
+        if: always()
         uses: ./
         with:
           job_status: ${{ job.status }}
