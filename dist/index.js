@@ -443,6 +443,12 @@ const branch = process.env.GITHUB_REF;
 const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
 const eventName = core.getInput('event_id') || triggerEventName || 'event';
+function checkBasicInputsSet() {
+    if (!(core.getInput('webhook_url')) || !(core.getInput('job_status'))) {
+        core.setFailed('Error: Required input for action is missing. Aborting');
+        process.exit(1);
+    }
+}
 function readEventPayloadFile(filePath) {
     return jsonfile_1.readFileSync(filePath);
 }
@@ -515,10 +521,6 @@ function formatRequestBodyData(notificationMessage) {
 }
 function notifyTeams(notificationMessage) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!(core.getInput('webhook_url'))) {
-            core.setFailed('Error : Webhook URL configuration is missing. Aborting');
-            process.exit(1);
-        }
         const requestBodyData = formatRequestBodyData(notificationMessage);
         fetch(core.getInput('webhook_url'), {
             method: 'POST',
@@ -543,6 +545,7 @@ function notifyTeams(notificationMessage) {
         });
     });
 }
+checkBasicInputsSet();
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
     const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
     if (eventNotification) {
