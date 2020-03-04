@@ -1,4 +1,8 @@
 /* eslint-disable no-unused-vars */
+import * as core from '@actions/core';
+import { join } from 'path';
+import { request } from 'https';
+import { readFileSync } from 'jsonfile';
 import { ValidationError } from 'yup';
 import { NotificationMessage } from './NotificationMessage';
 import { EventType } from './enums';
@@ -10,17 +14,16 @@ import {
 } from './eventPayloadSchemaBuilder';
 import notificationTemplate from './resources/notification.json';
 
-const core = require('@actions/core');
-const path = require('path');
-const https = require('https');
-
-const defaultJsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
+const defaultJsonPath = join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
 const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
-const githubEventPayload = require(githubEventPayloadFile);
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
+
+function readEventPayloadFile(filePath: string) : string {
+    return readFileSync(filePath);
+};
 
 function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
     let account;
@@ -112,8 +115,10 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
         }
     };
 
-    const req = https.request(options, (res) => {
-        if (res.statusCode >= 400) {
+    const req = request(options, (res) => {
+        if (!res) {
+            core.setFailed('No response from action');
+        } else if (res.statusCode && res.statusCode >= 400) {
             core.setFailed(`Action failed with status code  ${res.statusCode}`);
         } else {
             core.info(`statusCode: ${res.statusCode}`);
@@ -125,7 +130,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     });
 
     req.on('error', (error) => {
-        core.error(error);
+        core.error(error.message);
         core.setFailed(`Action failed with error ${error}`);
     });
 
@@ -134,13 +139,13 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    const eventNotification = parseEventToMessage(JSON.stringify(githubEventPayload));
+    const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);
     } else {
         core.setFailed('ERROR: Notification message not built correctly - Aborting');
     }
 } else {
-    core.warn('Job was cancelled, no notification will be sent');
+    core.warning('Job was cancelled, no notification will be sent');
     process.exit(0);
 }

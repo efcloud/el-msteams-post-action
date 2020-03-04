@@ -415,25 +415,36 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable no-unused-vars */
+const core = __importStar(__webpack_require__(357));
+const path_1 = __webpack_require__(622);
+const https_1 = __webpack_require__(211);
+const jsonfile_1 = __webpack_require__(890);
 const yup_1 = __webpack_require__(839);
 const enums_1 = __webpack_require__(297);
 const eventPayloadSchemaBuilder_1 = __webpack_require__(466);
 const notification_json_1 = __importDefault(__webpack_require__(662));
-const core = __webpack_require__(357);
-const path = __webpack_require__(622);
-const https = __webpack_require__(34);
-const defaultJsonPath = path.join(__dirname, '..', 'resources', 'notification.json');
+const defaultJsonPath = path_1.join(__dirname, '..', 'resources', 'notification.json');
 const workflow = process.env.GITHUB_WORKFLOW;
 const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
 const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
-const githubEventPayload = require(githubEventPayloadFile);
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
+function readEventPayloadFile(filePath) {
+    return jsonfile_1.readFileSync(filePath);
+}
+;
 function parseEventToMessage(eventPayloadText) {
     let account;
     let parsedSchema;
@@ -522,8 +533,11 @@ function notifyTeams(notificationMessage) {
                 'Content-Length': requestBodyData.length
             }
         };
-        const req = https.request(options, (res) => {
-            if (res.statusCode >= 400) {
+        const req = https_1.request(options, (res) => {
+            if (!res) {
+                core.setFailed('No response from action');
+            }
+            else if (res.statusCode && res.statusCode >= 400) {
                 core.setFailed(`Action failed with status code  ${res.statusCode}`);
             }
             else {
@@ -534,7 +548,7 @@ function notifyTeams(notificationMessage) {
             });
         });
         req.on('error', (error) => {
-            core.error(error);
+            core.error(error.message);
             core.setFailed(`Action failed with error ${error}`);
         });
         req.write(requestBodyData);
@@ -542,7 +556,7 @@ function notifyTeams(notificationMessage) {
     });
 }
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    const eventNotification = parseEventToMessage(JSON.stringify(githubEventPayload));
+    const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);
     }
@@ -551,7 +565,7 @@ if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
     }
 }
 else {
-    core.warn('Job was cancelled, no notification will be sent');
+    core.warning('Job was cancelled, no notification will be sent');
     process.exit(0);
 }
 
@@ -584,12 +598,7 @@ module.exports = mapCacheDelete;
 
 /***/ }),
 /* 33 */,
-/* 34 */
-/***/ (function(module) {
-
-module.exports = require("https");
-
-/***/ }),
+/* 34 */,
 /* 35 */,
 /* 36 */,
 /* 37 */
@@ -960,82 +969,9 @@ module.exports = listCacheClear;
 
 /***/ }),
 /* 59 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(module) {
 
-"use strict";
-
-
-var _interopRequireDefault = __webpack_require__(291);
-
-exports.__esModule = true;
-exports.getIn = getIn;
-exports.default = void 0;
-
-var _propertyExpr = __webpack_require__(618);
-
-var _has = _interopRequireDefault(__webpack_require__(180));
-
-var trim = function trim(part) {
-  return part.substr(0, part.length - 1).substr(1);
-};
-
-function getIn(schema, path, value, context) {
-  var parent, lastPart, lastPartDebug; // if only one "value" arg then use it for both
-
-  context = context || value;
-  if (!path) return {
-    parent: parent,
-    parentPath: path,
-    schema: schema
-  };
-  (0, _propertyExpr.forEach)(path, function (_part, isBracket, isArray) {
-    var part = isBracket ? trim(_part) : _part;
-
-    if (isArray || (0, _has.default)(schema, '_subType')) {
-      // we skipped an array: foo[].bar
-      var idx = isArray ? parseInt(part, 10) : 0;
-      schema = schema.resolve({
-        context: context,
-        parent: parent,
-        value: value
-      })._subType;
-
-      if (value) {
-        if (isArray && idx >= value.length) {
-          throw new Error("Yup.reach cannot resolve an array item at index: " + _part + ", in the path: " + path + ". " + "because there is no value at that index. ");
-        }
-
-        value = value[idx];
-      }
-    }
-
-    if (!isArray) {
-      schema = schema.resolve({
-        context: context,
-        parent: parent,
-        value: value
-      });
-      if (!(0, _has.default)(schema, 'fields') || !(0, _has.default)(schema.fields, part)) throw new Error("The schema does not contain the path: " + path + ". " + ("(failed at: " + lastPartDebug + " which is a type: \"" + schema._type + "\") "));
-      schema = schema.fields[part];
-      parent = value;
-      value = value && value[part];
-      lastPart = part;
-      lastPartDebug = isBracket ? '[' + _part + ']' : '.' + _part;
-    }
-  });
-  return {
-    schema: schema,
-    parent: parent,
-    parentPath: lastPart
-  };
-}
-
-var reach = function reach(obj, path, value, context) {
-  return getIn(obj, path, value, context).schema;
-};
-
-var _default = reach;
-exports.default = _default;
+module.exports = require("assert");
 
 /***/ }),
 /* 60 */,
@@ -2043,7 +1979,44 @@ module.exports = stubFalse;
 /* 151 */,
 /* 152 */,
 /* 153 */,
-/* 154 */,
+/* 154 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var baseProperty = __webpack_require__(558),
+    basePropertyDeep = __webpack_require__(906),
+    isKey = __webpack_require__(564),
+    toKey = __webpack_require__(349);
+
+/**
+ * Creates a function that returns the value at `path` of a given object.
+ *
+ * @static
+ * @memberOf _
+ * @since 2.4.0
+ * @category Util
+ * @param {Array|string} path The path of the property to get.
+ * @returns {Function} Returns the new accessor function.
+ * @example
+ *
+ * var objects = [
+ *   { 'a': { 'b': 2 } },
+ *   { 'a': { 'b': 1 } }
+ * ];
+ *
+ * _.map(objects, _.property('a.b'));
+ * // => [2, 1]
+ *
+ * _.map(_.sortBy(objects, _.property(['a', 'b'])), 'a.b');
+ * // => [1, 2]
+ */
+function property(path) {
+  return isKey(path) ? baseProperty(toKey(path)) : basePropertyDeep(path);
+}
+
+module.exports = property;
+
+
+/***/ }),
 /* 155 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -2447,82 +2420,9 @@ module.exports = iteratorToArray;
 /* 209 */,
 /* 210 */,
 /* 211 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(module) {
 
-var MapCache = __webpack_require__(523);
-
-/** Error message constants. */
-var FUNC_ERROR_TEXT = 'Expected a function';
-
-/**
- * Creates a function that memoizes the result of `func`. If `resolver` is
- * provided, it determines the cache key for storing the result based on the
- * arguments provided to the memoized function. By default, the first argument
- * provided to the memoized function is used as the map cache key. The `func`
- * is invoked with the `this` binding of the memoized function.
- *
- * **Note:** The cache is exposed as the `cache` property on the memoized
- * function. Its creation may be customized by replacing the `_.memoize.Cache`
- * constructor with one whose instances implement the
- * [`Map`](http://ecma-international.org/ecma-262/7.0/#sec-properties-of-the-map-prototype-object)
- * method interface of `clear`, `delete`, `get`, `has`, and `set`.
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Function
- * @param {Function} func The function to have its output memoized.
- * @param {Function} [resolver] The function to resolve the cache key.
- * @returns {Function} Returns the new memoized function.
- * @example
- *
- * var object = { 'a': 1, 'b': 2 };
- * var other = { 'c': 3, 'd': 4 };
- *
- * var values = _.memoize(_.values);
- * values(object);
- * // => [1, 2]
- *
- * values(other);
- * // => [3, 4]
- *
- * object.a = 2;
- * values(object);
- * // => [1, 2]
- *
- * // Modify the result cache.
- * values.cache.set(object, ['a', 'b']);
- * values(object);
- * // => ['a', 'b']
- *
- * // Replace `_.memoize.Cache`.
- * _.memoize.Cache = WeakMap;
- */
-function memoize(func, resolver) {
-  if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
-    throw new TypeError(FUNC_ERROR_TEXT);
-  }
-  var memoized = function() {
-    var args = arguments,
-        key = resolver ? resolver.apply(this, args) : args[0],
-        cache = memoized.cache;
-
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-    var result = func.apply(this, args);
-    memoized.cache = cache.set(key, result) || cache;
-    return result;
-  };
-  memoized.cache = new (memoize.Cache || MapCache);
-  return memoized;
-}
-
-// Expose `MapCache`.
-memoize.Cache = MapCache;
-
-module.exports = memoize;
-
+module.exports = require("https");
 
 /***/ }),
 /* 212 */,
@@ -2811,7 +2711,25 @@ module.exports = hashDelete;
 /***/ }),
 /* 249 */,
 /* 250 */,
-/* 251 */,
+/* 251 */
+/***/ (function(module) {
+
+/**
+ * The base implementation of `_.hasIn` without support for deep paths.
+ *
+ * @private
+ * @param {Object} [object] The object to query.
+ * @param {Array|string} key The key to check.
+ * @returns {boolean} Returns `true` if `key` exists, else `false`.
+ */
+function baseHasIn(object, key) {
+  return object != null && key in Object(object);
+}
+
+module.exports = baseHasIn;
+
+
+/***/ }),
 /* 252 */,
 /* 253 */,
 /* 254 */,
@@ -2904,7 +2822,7 @@ var baseMatches = __webpack_require__(782),
     baseMatchesProperty = __webpack_require__(864),
     identity = __webpack_require__(661),
     isArray = __webpack_require__(321),
-    property = __webpack_require__(833);
+    property = __webpack_require__(154);
 
 /**
  * The base implementation of `_.iteratee`.
@@ -4193,19 +4111,21 @@ module.exports = arrayMap;
 /* 371 */
 /***/ (function(module) {
 
-/**
- * The base implementation of `_.hasIn` without support for deep paths.
- *
- * @private
- * @param {Object} [object] The object to query.
- * @param {Array|string} key The key to check.
- * @returns {boolean} Returns `true` if `key` exists, else `false`.
- */
-function baseHasIn(object, key) {
-  return object != null && key in Object(object);
+function stringify (obj, options = {}) {
+  let EOL = options.EOL || '\n'
+
+  const str = JSON.stringify(obj, options ? options.replacer : null, options.spaces)
+
+  return str.replace(/\n/g, EOL) + EOL
 }
 
-module.exports = baseHasIn;
+function stripBom (content) {
+  // we do this because JSON.parse would convert it to a utf8 string if encoding wasn't specified
+  if (Buffer.isBuffer(content)) content = content.toString('utf8')
+  return content.replace(/^\uFEFF/, '')
+}
+
+module.exports = { stringify, stripBom }
 
 
 /***/ }),
@@ -4448,7 +4368,12 @@ function inherits(ctor, superCtor, spec) {
 module.exports = exports["default"];
 
 /***/ }),
-/* 413 */,
+/* 413 */
+/***/ (function(module) {
+
+module.exports = require("stream");
+
+/***/ }),
 /* 414 */,
 /* 415 */,
 /* 416 */,
@@ -5634,7 +5559,7 @@ module.exports = mapToArray;
 /* 535 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var memoize = __webpack_require__(211);
+var memoize = __webpack_require__(577);
 
 /** Used as the maximum memoize cache size. */
 var MAX_MEMOIZE_SIZE = 500;
@@ -5835,7 +5760,7 @@ module.exports = exports["default"];
 /* 548 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var baseAssignValue = __webpack_require__(997),
+var baseAssignValue = __webpack_require__(933),
     baseForOwn = __webpack_require__(689),
     baseIteratee = __webpack_require__(282);
 
@@ -6364,7 +6289,85 @@ module.exports = initCloneArray;
 
 /***/ }),
 /* 576 */,
-/* 577 */,
+/* 577 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var MapCache = __webpack_require__(523);
+
+/** Error message constants. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/**
+ * Creates a function that memoizes the result of `func`. If `resolver` is
+ * provided, it determines the cache key for storing the result based on the
+ * arguments provided to the memoized function. By default, the first argument
+ * provided to the memoized function is used as the map cache key. The `func`
+ * is invoked with the `this` binding of the memoized function.
+ *
+ * **Note:** The cache is exposed as the `cache` property on the memoized
+ * function. Its creation may be customized by replacing the `_.memoize.Cache`
+ * constructor with one whose instances implement the
+ * [`Map`](http://ecma-international.org/ecma-262/7.0/#sec-properties-of-the-map-prototype-object)
+ * method interface of `clear`, `delete`, `get`, `has`, and `set`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to have its output memoized.
+ * @param {Function} [resolver] The function to resolve the cache key.
+ * @returns {Function} Returns the new memoized function.
+ * @example
+ *
+ * var object = { 'a': 1, 'b': 2 };
+ * var other = { 'c': 3, 'd': 4 };
+ *
+ * var values = _.memoize(_.values);
+ * values(object);
+ * // => [1, 2]
+ *
+ * values(other);
+ * // => [3, 4]
+ *
+ * object.a = 2;
+ * values(object);
+ * // => [1, 2]
+ *
+ * // Modify the result cache.
+ * values.cache.set(object, ['a', 'b']);
+ * values(object);
+ * // => ['a', 'b']
+ *
+ * // Replace `_.memoize.Cache`.
+ * _.memoize.Cache = WeakMap;
+ */
+function memoize(func, resolver) {
+  if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  var memoized = function() {
+    var args = arguments,
+        key = resolver ? resolver.apply(this, args) : args[0],
+        cache = memoized.cache;
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    var result = func.apply(this, args);
+    memoized.cache = cache.set(key, result) || cache;
+    return result;
+  };
+  memoized.cache = new (memoize.Cache || MapCache);
+  return memoized;
+}
+
+// Expose `MapCache`.
+memoize.Cache = MapCache;
+
+module.exports = memoize;
+
+
+/***/ }),
 /* 578 */,
 /* 579 */,
 /* 580 */
@@ -6832,7 +6835,12 @@ function shouldBeQuoted(part) {
 
 
 /***/ }),
-/* 619 */,
+/* 619 */
+/***/ (function(module) {
+
+module.exports = require("constants");
+
+/***/ }),
 /* 620 */
 /***/ (function(module, exports) {
 
@@ -7271,7 +7279,7 @@ module.exports = cloneRegExp;
 /* 658 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var baseAssignValue = __webpack_require__(997),
+var baseAssignValue = __webpack_require__(933),
     baseForOwn = __webpack_require__(689),
     baseIteratee = __webpack_require__(282);
 
@@ -7352,7 +7360,7 @@ module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 var assignValue = __webpack_require__(939),
-    baseAssignValue = __webpack_require__(997);
+    baseAssignValue = __webpack_require__(933);
 
 /**
  * Copies properties of `source` to `object`.
@@ -7396,7 +7404,12 @@ module.exports = copyObject;
 /***/ }),
 /* 667 */,
 /* 668 */,
-/* 669 */,
+/* 669 */
+/***/ (function(module) {
+
+module.exports = require("util");
+
+/***/ }),
 /* 670 */,
 /* 671 */,
 /* 672 */
@@ -7543,7 +7556,7 @@ var _printValue = _interopRequireDefault(__webpack_require__(796));
 
 var _Reference = _interopRequireDefault(__webpack_require__(853));
 
-var _reach = __webpack_require__(59);
+var _reach = __webpack_require__(772);
 
 var RefSet =
 /*#__PURE__*/
@@ -8715,13 +8728,53 @@ module.exports = baseIsSet;
 /* 738 */,
 /* 739 */,
 /* 740 */,
-/* 741 */,
+/* 741 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+
+exports.fromCallback = function (fn) {
+  return Object.defineProperty(function () {
+    if (typeof arguments[arguments.length - 1] === 'function') fn.apply(this, arguments)
+    else {
+      return new Promise((resolve, reject) => {
+        arguments[arguments.length] = (err, res) => {
+          if (err) return reject(err)
+          resolve(res)
+        }
+        arguments.length++
+        fn.apply(this, arguments)
+      })
+    }
+  }, 'name', { value: fn.name })
+}
+
+exports.fromPromise = function (fn) {
+  return Object.defineProperty(function () {
+    const cb = arguments[arguments.length - 1]
+    if (typeof cb !== 'function') return fn.apply(this, arguments)
+    else {
+      delete arguments[arguments.length - 1]
+      arguments.length--
+      fn.apply(this, arguments).then(r => cb(null, r), cb)
+    }
+  }, 'name', { value: fn.name })
+}
+
+
+/***/ }),
 /* 742 */,
 /* 743 */,
 /* 744 */,
 /* 745 */,
 /* 746 */,
-/* 747 */,
+/* 747 */
+/***/ (function(module) {
+
+module.exports = require("fs");
+
+/***/ }),
 /* 748 */,
 /* 749 */,
 /* 750 */,
@@ -8816,7 +8869,85 @@ module.exports = nativeCreate;
 
 /***/ }),
 /* 771 */,
-/* 772 */,
+/* 772 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(291);
+
+exports.__esModule = true;
+exports.getIn = getIn;
+exports.default = void 0;
+
+var _propertyExpr = __webpack_require__(618);
+
+var _has = _interopRequireDefault(__webpack_require__(180));
+
+var trim = function trim(part) {
+  return part.substr(0, part.length - 1).substr(1);
+};
+
+function getIn(schema, path, value, context) {
+  var parent, lastPart, lastPartDebug; // if only one "value" arg then use it for both
+
+  context = context || value;
+  if (!path) return {
+    parent: parent,
+    parentPath: path,
+    schema: schema
+  };
+  (0, _propertyExpr.forEach)(path, function (_part, isBracket, isArray) {
+    var part = isBracket ? trim(_part) : _part;
+
+    if (isArray || (0, _has.default)(schema, '_subType')) {
+      // we skipped an array: foo[].bar
+      var idx = isArray ? parseInt(part, 10) : 0;
+      schema = schema.resolve({
+        context: context,
+        parent: parent,
+        value: value
+      })._subType;
+
+      if (value) {
+        if (isArray && idx >= value.length) {
+          throw new Error("Yup.reach cannot resolve an array item at index: " + _part + ", in the path: " + path + ". " + "because there is no value at that index. ");
+        }
+
+        value = value[idx];
+      }
+    }
+
+    if (!isArray) {
+      schema = schema.resolve({
+        context: context,
+        parent: parent,
+        value: value
+      });
+      if (!(0, _has.default)(schema, 'fields') || !(0, _has.default)(schema.fields, part)) throw new Error("The schema does not contain the path: " + path + ". " + ("(failed at: " + lastPartDebug + " which is a type: \"" + schema._type + "\") "));
+      schema = schema.fields[part];
+      parent = value;
+      value = value && value[part];
+      lastPart = part;
+      lastPartDebug = isBracket ? '[' + _part + ']' : '.' + _part;
+    }
+  });
+  return {
+    schema: schema,
+    parent: parent,
+    parentPath: lastPart
+  };
+}
+
+var reach = function reach(obj, path, value, context) {
+  return getIn(obj, path, value, context).schema;
+};
+
+var _default = reach;
+exports.default = _default;
+
+/***/ }),
 /* 773 */,
 /* 774 */,
 /* 775 */,
@@ -8856,7 +8987,354 @@ module.exports = baseMatches;
 /***/ }),
 /* 783 */,
 /* 784 */,
-/* 785 */,
+/* 785 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var constants = __webpack_require__(619)
+
+var origCwd = process.cwd
+var cwd = null
+
+var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform
+
+process.cwd = function() {
+  if (!cwd)
+    cwd = origCwd.call(process)
+  return cwd
+}
+try {
+  process.cwd()
+} catch (er) {}
+
+var chdir = process.chdir
+process.chdir = function(d) {
+  cwd = null
+  chdir.call(process, d)
+}
+
+module.exports = patch
+
+function patch (fs) {
+  // (re-)implement some things that are known busted or missing.
+
+  // lchmod, broken prior to 0.6.2
+  // back-port the fix here.
+  if (constants.hasOwnProperty('O_SYMLINK') &&
+      process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
+    patchLchmod(fs)
+  }
+
+  // lutimes implementation, or no-op
+  if (!fs.lutimes) {
+    patchLutimes(fs)
+  }
+
+  // https://github.com/isaacs/node-graceful-fs/issues/4
+  // Chown should not fail on einval or eperm if non-root.
+  // It should not fail on enosys ever, as this just indicates
+  // that a fs doesn't support the intended operation.
+
+  fs.chown = chownFix(fs.chown)
+  fs.fchown = chownFix(fs.fchown)
+  fs.lchown = chownFix(fs.lchown)
+
+  fs.chmod = chmodFix(fs.chmod)
+  fs.fchmod = chmodFix(fs.fchmod)
+  fs.lchmod = chmodFix(fs.lchmod)
+
+  fs.chownSync = chownFixSync(fs.chownSync)
+  fs.fchownSync = chownFixSync(fs.fchownSync)
+  fs.lchownSync = chownFixSync(fs.lchownSync)
+
+  fs.chmodSync = chmodFixSync(fs.chmodSync)
+  fs.fchmodSync = chmodFixSync(fs.fchmodSync)
+  fs.lchmodSync = chmodFixSync(fs.lchmodSync)
+
+  fs.stat = statFix(fs.stat)
+  fs.fstat = statFix(fs.fstat)
+  fs.lstat = statFix(fs.lstat)
+
+  fs.statSync = statFixSync(fs.statSync)
+  fs.fstatSync = statFixSync(fs.fstatSync)
+  fs.lstatSync = statFixSync(fs.lstatSync)
+
+  // if lchmod/lchown do not exist, then make them no-ops
+  if (!fs.lchmod) {
+    fs.lchmod = function (path, mode, cb) {
+      if (cb) process.nextTick(cb)
+    }
+    fs.lchmodSync = function () {}
+  }
+  if (!fs.lchown) {
+    fs.lchown = function (path, uid, gid, cb) {
+      if (cb) process.nextTick(cb)
+    }
+    fs.lchownSync = function () {}
+  }
+
+  // on Windows, A/V software can lock the directory, causing this
+  // to fail with an EACCES or EPERM if the directory contains newly
+  // created files.  Try again on failure, for up to 60 seconds.
+
+  // Set the timeout this long because some Windows Anti-Virus, such as Parity
+  // bit9, may lock files for up to a minute, causing npm package install
+  // failures. Also, take care to yield the scheduler. Windows scheduling gives
+  // CPU to a busy looping process, which can cause the program causing the lock
+  // contention to be starved of CPU by node, so the contention doesn't resolve.
+  if (platform === "win32") {
+    fs.rename = (function (fs$rename) { return function (from, to, cb) {
+      var start = Date.now()
+      var backoff = 0;
+      fs$rename(from, to, function CB (er) {
+        if (er
+            && (er.code === "EACCES" || er.code === "EPERM")
+            && Date.now() - start < 60000) {
+          setTimeout(function() {
+            fs.stat(to, function (stater, st) {
+              if (stater && stater.code === "ENOENT")
+                fs$rename(from, to, CB);
+              else
+                cb(er)
+            })
+          }, backoff)
+          if (backoff < 100)
+            backoff += 10;
+          return;
+        }
+        if (cb) cb(er)
+      })
+    }})(fs.rename)
+  }
+
+  // if read() returns EAGAIN, then just try it again.
+  fs.read = (function (fs$read) {
+    function read (fd, buffer, offset, length, position, callback_) {
+      var callback
+      if (callback_ && typeof callback_ === 'function') {
+        var eagCounter = 0
+        callback = function (er, _, __) {
+          if (er && er.code === 'EAGAIN' && eagCounter < 10) {
+            eagCounter ++
+            return fs$read.call(fs, fd, buffer, offset, length, position, callback)
+          }
+          callback_.apply(this, arguments)
+        }
+      }
+      return fs$read.call(fs, fd, buffer, offset, length, position, callback)
+    }
+
+    // This ensures `util.promisify` works as it does for native `fs.read`.
+    read.__proto__ = fs$read
+    return read
+  })(fs.read)
+
+  fs.readSync = (function (fs$readSync) { return function (fd, buffer, offset, length, position) {
+    var eagCounter = 0
+    while (true) {
+      try {
+        return fs$readSync.call(fs, fd, buffer, offset, length, position)
+      } catch (er) {
+        if (er.code === 'EAGAIN' && eagCounter < 10) {
+          eagCounter ++
+          continue
+        }
+        throw er
+      }
+    }
+  }})(fs.readSync)
+
+  function patchLchmod (fs) {
+    fs.lchmod = function (path, mode, callback) {
+      fs.open( path
+             , constants.O_WRONLY | constants.O_SYMLINK
+             , mode
+             , function (err, fd) {
+        if (err) {
+          if (callback) callback(err)
+          return
+        }
+        // prefer to return the chmod error, if one occurs,
+        // but still try to close, and report closing errors if they occur.
+        fs.fchmod(fd, mode, function (err) {
+          fs.close(fd, function(err2) {
+            if (callback) callback(err || err2)
+          })
+        })
+      })
+    }
+
+    fs.lchmodSync = function (path, mode) {
+      var fd = fs.openSync(path, constants.O_WRONLY | constants.O_SYMLINK, mode)
+
+      // prefer to return the chmod error, if one occurs,
+      // but still try to close, and report closing errors if they occur.
+      var threw = true
+      var ret
+      try {
+        ret = fs.fchmodSync(fd, mode)
+        threw = false
+      } finally {
+        if (threw) {
+          try {
+            fs.closeSync(fd)
+          } catch (er) {}
+        } else {
+          fs.closeSync(fd)
+        }
+      }
+      return ret
+    }
+  }
+
+  function patchLutimes (fs) {
+    if (constants.hasOwnProperty("O_SYMLINK")) {
+      fs.lutimes = function (path, at, mt, cb) {
+        fs.open(path, constants.O_SYMLINK, function (er, fd) {
+          if (er) {
+            if (cb) cb(er)
+            return
+          }
+          fs.futimes(fd, at, mt, function (er) {
+            fs.close(fd, function (er2) {
+              if (cb) cb(er || er2)
+            })
+          })
+        })
+      }
+
+      fs.lutimesSync = function (path, at, mt) {
+        var fd = fs.openSync(path, constants.O_SYMLINK)
+        var ret
+        var threw = true
+        try {
+          ret = fs.futimesSync(fd, at, mt)
+          threw = false
+        } finally {
+          if (threw) {
+            try {
+              fs.closeSync(fd)
+            } catch (er) {}
+          } else {
+            fs.closeSync(fd)
+          }
+        }
+        return ret
+      }
+
+    } else {
+      fs.lutimes = function (_a, _b, _c, cb) { if (cb) process.nextTick(cb) }
+      fs.lutimesSync = function () {}
+    }
+  }
+
+  function chmodFix (orig) {
+    if (!orig) return orig
+    return function (target, mode, cb) {
+      return orig.call(fs, target, mode, function (er) {
+        if (chownErOk(er)) er = null
+        if (cb) cb.apply(this, arguments)
+      })
+    }
+  }
+
+  function chmodFixSync (orig) {
+    if (!orig) return orig
+    return function (target, mode) {
+      try {
+        return orig.call(fs, target, mode)
+      } catch (er) {
+        if (!chownErOk(er)) throw er
+      }
+    }
+  }
+
+
+  function chownFix (orig) {
+    if (!orig) return orig
+    return function (target, uid, gid, cb) {
+      return orig.call(fs, target, uid, gid, function (er) {
+        if (chownErOk(er)) er = null
+        if (cb) cb.apply(this, arguments)
+      })
+    }
+  }
+
+  function chownFixSync (orig) {
+    if (!orig) return orig
+    return function (target, uid, gid) {
+      try {
+        return orig.call(fs, target, uid, gid)
+      } catch (er) {
+        if (!chownErOk(er)) throw er
+      }
+    }
+  }
+
+  function statFix (orig) {
+    if (!orig) return orig
+    // Older versions of Node erroneously returned signed integers for
+    // uid + gid.
+    return function (target, options, cb) {
+      if (typeof options === 'function') {
+        cb = options
+        options = null
+      }
+      function callback (er, stats) {
+        if (stats) {
+          if (stats.uid < 0) stats.uid += 0x100000000
+          if (stats.gid < 0) stats.gid += 0x100000000
+        }
+        if (cb) cb.apply(this, arguments)
+      }
+      return options ? orig.call(fs, target, options, callback)
+        : orig.call(fs, target, callback)
+    }
+  }
+
+  function statFixSync (orig) {
+    if (!orig) return orig
+    // Older versions of Node erroneously returned signed integers for
+    // uid + gid.
+    return function (target, options) {
+      var stats = options ? orig.call(fs, target, options)
+        : orig.call(fs, target)
+      if (stats.uid < 0) stats.uid += 0x100000000
+      if (stats.gid < 0) stats.gid += 0x100000000
+      return stats;
+    }
+  }
+
+  // ENOSYS means that the fs doesn't support the op. Just ignore
+  // that, because it doesn't matter.
+  //
+  // if there's no getuid, or if getuid() is something other
+  // than 0, and the error is EINVAL or EPERM, then just ignore
+  // it.
+  //
+  // This specific case is a silent failure in cp, install, tar,
+  // and most other unix tools that manage permissions.
+  //
+  // When running as root, or if other types of errors are
+  // encountered, then it's strict.
+  function chownErOk (er) {
+    if (!er)
+      return true
+
+    if (er.code === "ENOSYS")
+      return true
+
+    var nonroot = !process.getuid || process.getuid() !== 0
+    if (nonroot) {
+      if (er.code === "EINVAL" || er.code === "EPERM")
+        return true
+    }
+
+    return false
+  }
+}
+
+
+/***/ }),
 /* 786 */,
 /* 787 */,
 /* 788 */,
@@ -9084,38 +9562,352 @@ module.exports = Hash;
 /* 833 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var baseProperty = __webpack_require__(558),
-    basePropertyDeep = __webpack_require__(906),
-    isKey = __webpack_require__(564),
-    toKey = __webpack_require__(349);
+var fs = __webpack_require__(747)
+var polyfills = __webpack_require__(785)
+var legacy = __webpack_require__(875)
+var clone = __webpack_require__(997)
 
-/**
- * Creates a function that returns the value at `path` of a given object.
- *
- * @static
- * @memberOf _
- * @since 2.4.0
- * @category Util
- * @param {Array|string} path The path of the property to get.
- * @returns {Function} Returns the new accessor function.
- * @example
- *
- * var objects = [
- *   { 'a': { 'b': 2 } },
- *   { 'a': { 'b': 1 } }
- * ];
- *
- * _.map(objects, _.property('a.b'));
- * // => [2, 1]
- *
- * _.map(_.sortBy(objects, _.property(['a', 'b'])), 'a.b');
- * // => [1, 2]
- */
-function property(path) {
-  return isKey(path) ? baseProperty(toKey(path)) : basePropertyDeep(path);
+var util = __webpack_require__(669)
+
+/* istanbul ignore next - node 0.x polyfill */
+var gracefulQueue
+var previousSymbol
+
+/* istanbul ignore else - node 0.x polyfill */
+if (typeof Symbol === 'function' && typeof Symbol.for === 'function') {
+  gracefulQueue = Symbol.for('graceful-fs.queue')
+  // This is used in testing by future versions
+  previousSymbol = Symbol.for('graceful-fs.previous')
+} else {
+  gracefulQueue = '___graceful-fs.queue'
+  previousSymbol = '___graceful-fs.previous'
 }
 
-module.exports = property;
+function noop () {}
+
+var debug = noop
+if (util.debuglog)
+  debug = util.debuglog('gfs4')
+else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ''))
+  debug = function() {
+    var m = util.format.apply(util, arguments)
+    m = 'GFS4: ' + m.split(/\n/).join('\nGFS4: ')
+    console.error(m)
+  }
+
+// Once time initialization
+if (!global[gracefulQueue]) {
+  // This queue can be shared by multiple loaded instances
+  var queue = []
+  Object.defineProperty(global, gracefulQueue, {
+    get: function() {
+      return queue
+    }
+  })
+
+  // Patch fs.close/closeSync to shared queue version, because we need
+  // to retry() whenever a close happens *anywhere* in the program.
+  // This is essential when multiple graceful-fs instances are
+  // in play at the same time.
+  fs.close = (function (fs$close) {
+    function close (fd, cb) {
+      return fs$close.call(fs, fd, function (err) {
+        // This function uses the graceful-fs shared queue
+        if (!err) {
+          retry()
+        }
+
+        if (typeof cb === 'function')
+          cb.apply(this, arguments)
+      })
+    }
+
+    Object.defineProperty(close, previousSymbol, {
+      value: fs$close
+    })
+    return close
+  })(fs.close)
+
+  fs.closeSync = (function (fs$closeSync) {
+    function closeSync (fd) {
+      // This function uses the graceful-fs shared queue
+      fs$closeSync.apply(fs, arguments)
+      retry()
+    }
+
+    Object.defineProperty(closeSync, previousSymbol, {
+      value: fs$closeSync
+    })
+    return closeSync
+  })(fs.closeSync)
+
+  if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || '')) {
+    process.on('exit', function() {
+      debug(global[gracefulQueue])
+      __webpack_require__(59).equal(global[gracefulQueue].length, 0)
+    })
+  }
+}
+
+module.exports = patch(clone(fs))
+if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs.__patched) {
+    module.exports = patch(fs)
+    fs.__patched = true;
+}
+
+function patch (fs) {
+  // Everything that references the open() function needs to be in here
+  polyfills(fs)
+  fs.gracefulify = patch
+
+  fs.createReadStream = createReadStream
+  fs.createWriteStream = createWriteStream
+  var fs$readFile = fs.readFile
+  fs.readFile = readFile
+  function readFile (path, options, cb) {
+    if (typeof options === 'function')
+      cb = options, options = null
+
+    return go$readFile(path, options, cb)
+
+    function go$readFile (path, options, cb) {
+      return fs$readFile(path, options, function (err) {
+        if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+          enqueue([go$readFile, [path, options, cb]])
+        else {
+          if (typeof cb === 'function')
+            cb.apply(this, arguments)
+          retry()
+        }
+      })
+    }
+  }
+
+  var fs$writeFile = fs.writeFile
+  fs.writeFile = writeFile
+  function writeFile (path, data, options, cb) {
+    if (typeof options === 'function')
+      cb = options, options = null
+
+    return go$writeFile(path, data, options, cb)
+
+    function go$writeFile (path, data, options, cb) {
+      return fs$writeFile(path, data, options, function (err) {
+        if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+          enqueue([go$writeFile, [path, data, options, cb]])
+        else {
+          if (typeof cb === 'function')
+            cb.apply(this, arguments)
+          retry()
+        }
+      })
+    }
+  }
+
+  var fs$appendFile = fs.appendFile
+  if (fs$appendFile)
+    fs.appendFile = appendFile
+  function appendFile (path, data, options, cb) {
+    if (typeof options === 'function')
+      cb = options, options = null
+
+    return go$appendFile(path, data, options, cb)
+
+    function go$appendFile (path, data, options, cb) {
+      return fs$appendFile(path, data, options, function (err) {
+        if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+          enqueue([go$appendFile, [path, data, options, cb]])
+        else {
+          if (typeof cb === 'function')
+            cb.apply(this, arguments)
+          retry()
+        }
+      })
+    }
+  }
+
+  var fs$readdir = fs.readdir
+  fs.readdir = readdir
+  function readdir (path, options, cb) {
+    var args = [path]
+    if (typeof options !== 'function') {
+      args.push(options)
+    } else {
+      cb = options
+    }
+    args.push(go$readdir$cb)
+
+    return go$readdir(args)
+
+    function go$readdir$cb (err, files) {
+      if (files && files.sort)
+        files.sort()
+
+      if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+        enqueue([go$readdir, [args]])
+
+      else {
+        if (typeof cb === 'function')
+          cb.apply(this, arguments)
+        retry()
+      }
+    }
+  }
+
+  function go$readdir (args) {
+    return fs$readdir.apply(fs, args)
+  }
+
+  if (process.version.substr(0, 4) === 'v0.8') {
+    var legStreams = legacy(fs)
+    ReadStream = legStreams.ReadStream
+    WriteStream = legStreams.WriteStream
+  }
+
+  var fs$ReadStream = fs.ReadStream
+  if (fs$ReadStream) {
+    ReadStream.prototype = Object.create(fs$ReadStream.prototype)
+    ReadStream.prototype.open = ReadStream$open
+  }
+
+  var fs$WriteStream = fs.WriteStream
+  if (fs$WriteStream) {
+    WriteStream.prototype = Object.create(fs$WriteStream.prototype)
+    WriteStream.prototype.open = WriteStream$open
+  }
+
+  Object.defineProperty(fs, 'ReadStream', {
+    get: function () {
+      return ReadStream
+    },
+    set: function (val) {
+      ReadStream = val
+    },
+    enumerable: true,
+    configurable: true
+  })
+  Object.defineProperty(fs, 'WriteStream', {
+    get: function () {
+      return WriteStream
+    },
+    set: function (val) {
+      WriteStream = val
+    },
+    enumerable: true,
+    configurable: true
+  })
+
+  // legacy names
+  var FileReadStream = ReadStream
+  Object.defineProperty(fs, 'FileReadStream', {
+    get: function () {
+      return FileReadStream
+    },
+    set: function (val) {
+      FileReadStream = val
+    },
+    enumerable: true,
+    configurable: true
+  })
+  var FileWriteStream = WriteStream
+  Object.defineProperty(fs, 'FileWriteStream', {
+    get: function () {
+      return FileWriteStream
+    },
+    set: function (val) {
+      FileWriteStream = val
+    },
+    enumerable: true,
+    configurable: true
+  })
+
+  function ReadStream (path, options) {
+    if (this instanceof ReadStream)
+      return fs$ReadStream.apply(this, arguments), this
+    else
+      return ReadStream.apply(Object.create(ReadStream.prototype), arguments)
+  }
+
+  function ReadStream$open () {
+    var that = this
+    open(that.path, that.flags, that.mode, function (err, fd) {
+      if (err) {
+        if (that.autoClose)
+          that.destroy()
+
+        that.emit('error', err)
+      } else {
+        that.fd = fd
+        that.emit('open', fd)
+        that.read()
+      }
+    })
+  }
+
+  function WriteStream (path, options) {
+    if (this instanceof WriteStream)
+      return fs$WriteStream.apply(this, arguments), this
+    else
+      return WriteStream.apply(Object.create(WriteStream.prototype), arguments)
+  }
+
+  function WriteStream$open () {
+    var that = this
+    open(that.path, that.flags, that.mode, function (err, fd) {
+      if (err) {
+        that.destroy()
+        that.emit('error', err)
+      } else {
+        that.fd = fd
+        that.emit('open', fd)
+      }
+    })
+  }
+
+  function createReadStream (path, options) {
+    return new fs.ReadStream(path, options)
+  }
+
+  function createWriteStream (path, options) {
+    return new fs.WriteStream(path, options)
+  }
+
+  var fs$open = fs.open
+  fs.open = open
+  function open (path, flags, mode, cb) {
+    if (typeof mode === 'function')
+      cb = mode, mode = null
+
+    return go$open(path, flags, mode, cb)
+
+    function go$open (path, flags, mode, cb) {
+      return fs$open(path, flags, mode, function (err, fd) {
+        if (err && (err.code === 'EMFILE' || err.code === 'ENFILE'))
+          enqueue([go$open, [path, flags, mode, cb]])
+        else {
+          if (typeof cb === 'function')
+            cb.apply(this, arguments)
+          retry()
+        }
+      })
+    }
+  }
+
+  return fs
+}
+
+function enqueue (elem) {
+  debug('ENQUEUE', elem[0].name, elem[1])
+  global[gracefulQueue].push(elem)
+}
+
+function retry () {
+  var elem = global[gracefulQueue].shift()
+  if (elem) {
+    debug('RETRY', elem[0].name, elem[1])
+    elem[0].apply(null, elem[1])
+  }
+}
 
 
 /***/ }),
@@ -9207,7 +9999,7 @@ var _ValidationError = _interopRequireDefault(__webpack_require__(570));
 
 exports.ValidationError = _ValidationError.default;
 
-var _reach = _interopRequireDefault(__webpack_require__(59));
+var _reach = _interopRequireDefault(__webpack_require__(772));
 
 exports.reach = _reach.default;
 
@@ -9465,7 +10257,7 @@ module.exports = exports["default"];
 /* 854 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var baseHasIn = __webpack_require__(371),
+var baseHasIn = __webpack_require__(251),
     hasPath = __webpack_require__(85);
 
 /**
@@ -9849,7 +10641,130 @@ module.exports = deburrLetter;
 
 
 /***/ }),
-/* 875 */,
+/* 875 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var Stream = __webpack_require__(413).Stream
+
+module.exports = legacy
+
+function legacy (fs) {
+  return {
+    ReadStream: ReadStream,
+    WriteStream: WriteStream
+  }
+
+  function ReadStream (path, options) {
+    if (!(this instanceof ReadStream)) return new ReadStream(path, options);
+
+    Stream.call(this);
+
+    var self = this;
+
+    this.path = path;
+    this.fd = null;
+    this.readable = true;
+    this.paused = false;
+
+    this.flags = 'r';
+    this.mode = 438; /*=0666*/
+    this.bufferSize = 64 * 1024;
+
+    options = options || {};
+
+    // Mixin options into this
+    var keys = Object.keys(options);
+    for (var index = 0, length = keys.length; index < length; index++) {
+      var key = keys[index];
+      this[key] = options[key];
+    }
+
+    if (this.encoding) this.setEncoding(this.encoding);
+
+    if (this.start !== undefined) {
+      if ('number' !== typeof this.start) {
+        throw TypeError('start must be a Number');
+      }
+      if (this.end === undefined) {
+        this.end = Infinity;
+      } else if ('number' !== typeof this.end) {
+        throw TypeError('end must be a Number');
+      }
+
+      if (this.start > this.end) {
+        throw new Error('start must be <= end');
+      }
+
+      this.pos = this.start;
+    }
+
+    if (this.fd !== null) {
+      process.nextTick(function() {
+        self._read();
+      });
+      return;
+    }
+
+    fs.open(this.path, this.flags, this.mode, function (err, fd) {
+      if (err) {
+        self.emit('error', err);
+        self.readable = false;
+        return;
+      }
+
+      self.fd = fd;
+      self.emit('open', fd);
+      self._read();
+    })
+  }
+
+  function WriteStream (path, options) {
+    if (!(this instanceof WriteStream)) return new WriteStream(path, options);
+
+    Stream.call(this);
+
+    this.path = path;
+    this.fd = null;
+    this.writable = true;
+
+    this.flags = 'w';
+    this.encoding = 'binary';
+    this.mode = 438; /*=0666*/
+    this.bytesWritten = 0;
+
+    options = options || {};
+
+    // Mixin options into this
+    var keys = Object.keys(options);
+    for (var index = 0, length = keys.length; index < length; index++) {
+      var key = keys[index];
+      this[key] = options[key];
+    }
+
+    if (this.start !== undefined) {
+      if ('number' !== typeof this.start) {
+        throw TypeError('start must be a Number');
+      }
+      if (this.start < 0) {
+        throw new Error('start must be >= zero');
+      }
+
+      this.pos = this.start;
+    }
+
+    this.busy = false;
+    this._queue = [];
+
+    if (this.fd === null) {
+      this._open = fs.open;
+      this._queue.push([this._open, this.path, this.flags, this.mode, undefined]);
+      this.flush();
+    }
+  }
+}
+
+
+/***/ }),
 /* 876 */,
 /* 877 */,
 /* 878 */,
@@ -9864,7 +10779,100 @@ module.exports = deburrLetter;
 /* 887 */,
 /* 888 */,
 /* 889 */,
-/* 890 */,
+/* 890 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+let _fs
+try {
+  _fs = __webpack_require__(833)
+} catch (_) {
+  _fs = __webpack_require__(747)
+}
+const universalify = __webpack_require__(741)
+const { stringify, stripBom } = __webpack_require__(371)
+
+async function _readFile (file, options = {}) {
+  if (typeof options === 'string') {
+    options = { encoding: options }
+  }
+
+  const fs = options.fs || _fs
+
+  const shouldThrow = 'throws' in options ? options.throws : true
+
+  let data = await universalify.fromCallback(fs.readFile)(file, options)
+
+  data = stripBom(data)
+
+  let obj
+  try {
+    obj = JSON.parse(data, options ? options.reviver : null)
+  } catch (err) {
+    if (shouldThrow) {
+      err.message = `${file}: ${err.message}`
+      throw err
+    } else {
+      return null
+    }
+  }
+
+  return obj
+}
+
+const readFile = universalify.fromPromise(_readFile)
+
+function readFileSync (file, options = {}) {
+  if (typeof options === 'string') {
+    options = { encoding: options }
+  }
+
+  const fs = options.fs || _fs
+
+  const shouldThrow = 'throws' in options ? options.throws : true
+
+  try {
+    let content = fs.readFileSync(file, options)
+    content = stripBom(content)
+    return JSON.parse(content, options.reviver)
+  } catch (err) {
+    if (shouldThrow) {
+      err.message = `${file}: ${err.message}`
+      throw err
+    } else {
+      return null
+    }
+  }
+}
+
+async function _writeFile (file, obj, options = {}) {
+  const fs = options.fs || _fs
+
+  const str = stringify(obj, options)
+
+  await universalify.fromCallback(fs.writeFile)(file, str, options)
+}
+
+const writeFile = universalify.fromPromise(_writeFile)
+
+function writeFileSync (file, obj, options = {}) {
+  const fs = options.fs || _fs
+
+  const str = stringify(obj, options)
+  // not sure if fs.writeFileSync returns anything, but just in case
+  return fs.writeFileSync(file, str, options)
+}
+
+const jsonfile = {
+  readFile,
+  readFileSync,
+  writeFile,
+  writeFileSync
+}
+
+module.exports = jsonfile
+
+
+/***/ }),
 /* 891 */,
 /* 892 */,
 /* 893 */,
@@ -10639,7 +11647,37 @@ module.exports = isPrototype;
 /* 930 */,
 /* 931 */,
 /* 932 */,
-/* 933 */,
+/* 933 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var defineProperty = __webpack_require__(936);
+
+/**
+ * The base implementation of `assignValue` and `assignMergeValue` without
+ * value checks.
+ *
+ * @private
+ * @param {Object} object The object to modify.
+ * @param {string} key The key of the property to assign.
+ * @param {*} value The value to assign.
+ */
+function baseAssignValue(object, key, value) {
+  if (key == '__proto__' && defineProperty) {
+    defineProperty(object, key, {
+      'configurable': true,
+      'enumerable': true,
+      'value': value,
+      'writable': true
+    });
+  } else {
+    object[key] = value;
+  }
+}
+
+module.exports = baseAssignValue;
+
+
+/***/ }),
 /* 934 */,
 /* 935 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -10697,7 +11735,7 @@ module.exports = defineProperty;
 /* 939 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-var baseAssignValue = __webpack_require__(997),
+var baseAssignValue = __webpack_require__(933),
     eq = __webpack_require__(905);
 
 /** Used for built-in method references. */
@@ -10930,33 +11968,28 @@ module.exports = getMatchData;
 /* 995 */,
 /* 996 */,
 /* 997 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(module) {
 
-var defineProperty = __webpack_require__(936);
+"use strict";
 
-/**
- * The base implementation of `assignValue` and `assignMergeValue` without
- * value checks.
- *
- * @private
- * @param {Object} object The object to modify.
- * @param {string} key The key of the property to assign.
- * @param {*} value The value to assign.
- */
-function baseAssignValue(object, key, value) {
-  if (key == '__proto__' && defineProperty) {
-    defineProperty(object, key, {
-      'configurable': true,
-      'enumerable': true,
-      'value': value,
-      'writable': true
-    });
-  } else {
-    object[key] = value;
-  }
+
+module.exports = clone
+
+function clone (obj) {
+  if (obj === null || typeof obj !== 'object')
+    return obj
+
+  if (obj instanceof Object)
+    var copy = { __proto__: obj.__proto__ }
+  else
+    var copy = Object.create(null)
+
+  Object.getOwnPropertyNames(obj).forEach(function (key) {
+    Object.defineProperty(copy, key, Object.getOwnPropertyDescriptor(obj, key))
+  })
+
+  return copy
 }
-
-module.exports = baseAssignValue;
 
 
 /***/ })
