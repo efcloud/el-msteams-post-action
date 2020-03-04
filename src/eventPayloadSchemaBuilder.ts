@@ -1,4 +1,4 @@
-const yup = require('yup');
+import * as yup from 'yup';
 
 export const schemaOnpush = yup.object().shape({
     base_ref: yup.string().nullable(),
