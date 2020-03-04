@@ -446,7 +446,6 @@ const eventName = core.getInput('event_id') || triggerEventName || 'event';
 function readEventPayloadFile(filePath) {
     return jsonfile_1.readFileSync(filePath);
 }
-;
 function parseEventToMessage(eventPayloadText) {
     let account;
     let parsedSchema;
@@ -502,7 +501,18 @@ function parseEventToMessage(eventPayloadText) {
         return core.setFailed(`ERROR : ${errorDetails}`);
     }
 }
-;
+function formatRequestBodyData(notificationMessage) {
+    const configuration = {
+        GITHUB_WORKFLOW: workflow,
+        GITHUB_REPOSITORY: repository,
+        GITHUB_REF: branch,
+        GITHUB_TRIGGER_EVENT_DETAILS: notificationMessage.details,
+        GITHUB_TRIGGER_EVENT: notificationMessage.message,
+        GITHUB_EVENT_URL: notificationMessage.url,
+        GITHUB_STATUS: core.getInput('job_status')
+    };
+    return typescript_string_operations_1.String.Format(JSON.stringify(notification_json_1.default), configuration);
+}
 function notifyTeams(notificationMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(core.getInput('webhook_url'))) {
@@ -512,17 +522,7 @@ function notifyTeams(notificationMessage) {
         const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
         const hostnameMatch = matches && matches[1];
         const pathMatch = matches && matches[2];
-        let requestBodyData = JSON.stringify(notification_json_1.default);
-        const configuration = {
-            GITHUB_WORKFLOW: workflow,
-            GITHUB_REPOSITORY: repository,
-            GITHUB_REF: branch,
-            GITHUB_TRIGGER_EVENT_DETAILS: notificationMessage.details,
-            GITHUB_TRIGGER_EVENT: notificationMessage.message,
-            GITHUB_EVENT_URL: notificationMessage.url,
-            GITHUB_STATUS: core.getInput('job_status')
-        };
-        requestBodyData = typescript_string_operations_1.String.Format(requestBodyData, configuration);
+        const requestBodyData = formatRequestBodyData(notificationMessage);
         const options = {
             hostname: `${hostnameMatch}`,
             port: 443,

@@ -25,7 +25,7 @@ const eventName: string = core.getInput('event_id') || triggerEventName || 'even
 
 function readEventPayloadFile(filePath: string) : string {
     return readFileSync(filePath);
-};
+}
 
 function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
     let account;
@@ -79,20 +79,9 @@ function parseEventToMessage(eventPayloadText: string): NotificationMessage | vo
         }
         return core.setFailed(`ERROR : ${errorDetails}`);
     }
-};
+}
 
-
-async function notifyTeams(notificationMessage: NotificationMessage) {
-    if (!(core.getInput('webhook_url'))) {
-        core.setFailed('Error : Webhook URL configuration is missing. Aborting');
-        process.exit(1);
-    }
-    const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
-    const hostnameMatch = matches && matches[1];
-    const pathMatch = matches && matches[2];
-
-    let requestBodyData = JSON.stringify(notificationTemplate);
-
+function formatRequestBodyData(notificationMessage: NotificationMessage) {
     const configuration = {
         GITHUB_WORKFLOW: workflow,
         GITHUB_REPOSITORY: repository,
@@ -103,7 +92,19 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
         GITHUB_STATUS: core.getInput('job_status')
     };
 
-    requestBodyData = String.Format(requestBodyData,configuration);
+    return String.Format(JSON.stringify(notificationTemplate), configuration);
+}
+
+async function notifyTeams(notificationMessage: NotificationMessage) {
+    if (!(core.getInput('webhook_url'))) {
+        core.setFailed('Error : Webhook URL configuration is missing. Aborting');
+        process.exit(1);
+    }
+    const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
+    const hostnameMatch = matches && matches[1];
+    const pathMatch = matches && matches[2];
+
+    const requestBodyData = formatRequestBodyData(notificationMessage);
 
     const options = {
         hostname: `${hostnameMatch}`,
