@@ -20,6 +20,7 @@ const repository = process.env.GITHUB_REPOSITORY;
 const branch = process.env.GITHUB_REF;
 const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
+const eventName: string = core.getInput('event_id') || triggerEventName || 'event';
 
 function readEventPayloadFile(filePath: string) : string {
     return readFileSync(filePath);
@@ -29,11 +30,6 @@ function parseEventToMessage(eventPayloadText: string): NotificationMessage | vo
     let account;
     let parsedSchema;
     try {
-        let eventName: string = triggerEventName || 'event';
-        if (core.getInput('event_id')) {
-            eventName = core.getInput('event_id');
-        }
-
         switch (eventName) {
             case EventType.PUSH:
                 parsedSchema = schemaOnpush.validateSync(eventPayloadText);
