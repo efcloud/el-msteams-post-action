@@ -22,7 +22,7 @@ const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
 const githubEventPayload = require(githubEventPayloadFile);
 const triggerEventName = process.env.GITHUB_EVENT_NAME;
 
-export const parsedNotificationMessage = function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
+function parseEventToMessage(eventPayloadText: string): NotificationMessage | void {
     let account;
     let parsedSchema;
     try {
@@ -134,7 +134,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    const eventNotification = parsedNotificationMessage(JSON.stringify(githubEventPayload));
+    const eventNotification = parseEventToMessage(JSON.stringify(githubEventPayload));
     if (eventNotification) {
         notifyTeams(eventNotification);
     } else {
