@@ -4,6 +4,7 @@ import { join } from 'path';
 import { request } from 'https';
 import { readFileSync } from 'jsonfile';
 import { ValidationError } from 'yup';
+import { String } from 'typescript-string-operations';
 import { NotificationMessage } from './NotificationMessage';
 import { EventType } from './enums';
 import {
@@ -91,14 +92,18 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     const pathMatch = matches && matches[2];
 
     let requestBodyData = JSON.stringify(notificationTemplate);
-    requestBodyData = requestBodyData
-        .replace(/GITHUB_WORKFLOW/g, `${workflow}`)
-        .replace(/GITHUB_REPOSITORY/g, `${repository}`)
-        .replace(/GITHUB_REF/g, `${branch}`)
-        .replace(/GITHUB_TRIGGER_EVENT_DETAILS/g, `${notificationMessage.details}`)
-        .replace(/GITHUB_TRIGGER_EVENT/g, `${notificationMessage.message}`)
-        .replace(/GITHUB_EVENT_URL/g, `${notificationMessage.url}`)
-        .replace(/GITHUB_STATUS/g, `${core.getInput('job_status')}`);
+
+    const configuration = {
+        GITHUB_WORKFLOW: workflow,
+        GITHUB_REPOSITORY: repository,
+        GITHUB_REF: branch,
+        GITHUB_TRIGGER_EVENT_DETAILS: notificationMessage.details,
+        GITHUB_TRIGGER_EVENT: notificationMessage.message,
+        GITHUB_EVENT_URL: notificationMessage.url,
+        GITHUB_STATUS: core.getInput('job_status')
+    };
+
+    requestBodyData = String.Format(requestBodyData,configuration);
 
     const options = {
         hostname: `${hostnameMatch}`,

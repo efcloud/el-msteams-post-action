@@ -5,30 +5,30 @@
   "summary": "Notification from Github actions",
   "sections": [
     {
-      "activityTitle": "Notification triggered for workflow \"GITHUB_WORKFLOW\"",
+      "activityTitle": "Notification triggered for workflow \"{GITHUB_WORKFLOW}\"",
       "facts": [{
         "name": "Repository",
-        "value": "GITHUB_REPOSITORY"
+        "value": "{GITHUB_REPOSITORY}"
       },
         {
           "name": "Branch",
-          "value": "GITHUB_REF"
+          "value": "{GITHUB_REF}"
         },
         {
           "name": "Action",
-          "value": "GITHUB_TRIGGER_EVENT"
+          "value": "{GITHUB_TRIGGER_EVENT}"
         },
         {
           "name": "Details",
-          "value": "GITHUB_TRIGGER_EVENT_DETAILS"
+          "value": "{GITHUB_TRIGGER_EVENT_DETAILS}"
         },
         {
           "name": "Url",
-          "value": "[Drilldown](GITHUB_EVENT_URL)"
+          "value": "[Drilldown]({GITHUB_EVENT_URL})"
         },
         {
           "name": "Job Status",
-          "value": "GITHUB_STATUS"
+          "value": "{GITHUB_STATUS}"
         }],
       "markdown": true
     }
