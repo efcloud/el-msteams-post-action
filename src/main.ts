@@ -84,7 +84,7 @@ function parseEventToMessage(eventPayloadText: string): NotificationMessage | vo
         } else {
             errorDetails = error.message;
         }
-        return core.setFailed(`ERROR : ${errorDetails}`);
+        return void core.setFailed(`ERROR : ${errorDetails}`);
     }
 }
 
