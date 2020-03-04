@@ -16,7 +16,7 @@ describe('Event payload on issue', () => {
     });
 
     it('should include the expected issue.title value', () => {
-        expect(parsed_schema.issue.title).to.eql("Spelling error in the README file2");
+        expect(parsed_schema.issue.title).to.eql("Spelling error in the README file");
     });
 
     it('should include the expected issue.state value', () => {
