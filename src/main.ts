@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import * as core from '@actions/core';
 import { join } from 'path';
-import { request } from 'https';
+import * as fetch from 'node-fetch';
 import { readFileSync } from 'jsonfile';
 import { ValidationError } from 'yup';
 import { String } from 'typescript-string-operations';
@@ -100,44 +100,28 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
         core.setFailed('Error : Webhook URL configuration is missing. Aborting');
         process.exit(1);
     }
-    const matches = core.getInput('webhook_url').match(/^https?:\/\/([^/?#]+)(.*)/i);
-    const hostnameMatch = matches && matches[1];
-    const pathMatch = matches && matches[2];
 
     const requestBodyData = formatRequestBodyData(notificationMessage);
 
-    const options = {
-        hostname: `${hostnameMatch}`,
-        port: 443,
-        path: `${pathMatch}`,
+    fetch(core.getInput('webhook_url'), {
         method: 'POST',
+        body: requestBodyData,
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': requestBodyData.length
         }
-    };
-
-    const req = request(options, (res) => {
+    }).then((res) => {
         if (!res) {
             core.setFailed('No response from action');
-        } else if (res.statusCode && res.statusCode >= 400) {
-            core.setFailed(`Action failed with status code  ${res.statusCode}`);
+        } else if (res.status && res.status >= 400) {
+            core.setFailed(`Action failed with status code  ${res.status}`);
         } else {
-            core.info(`statusCode: ${res.statusCode}`);
+            core.info(`statusCode: ${res.status}`);
         }
-
-        res.on('data', (d) => {
-            core.info(d);
-        });
+    }).catch((err) => {
+        core.error(err.message);
+        core.setFailed(`Action failed with error ${err.message}`);
     });
-
-    req.on('error', (error) => {
-        core.error(error.message);
-        core.setFailed(`Action failed with error ${error}`);
-    });
-
-    req.write(requestBodyData);
-    req.end();
 }
 
 if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
