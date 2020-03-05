@@ -20,7 +20,7 @@ describe('Event payload on push', () => {
     });
 
     it('should include the expected pusher.email value', () => {
-        expect(parsed_schema.pusher.email).to.eql("54802933+eleni-salamani@users.noreply.github.com");
+        expect(parsed_schema.pusher.email).to.eql("54802933+eleni-salamani@users.noreply.github.con");
     });
 
     it('should include the expected pusher.name value', () => {
