@@ -1,0 +1,22 @@
+name: "Send notifications to MS Teams channel - on PR"
+
+on: [pull_request]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Check event payload
+        run: cp ${GITHUB_EVENT_PATH} /tmp
+      - name: Test sample notification
+        uses: ./
+        with:
+          job_status: ${{ job.status }}
+          webhook_url: ${{ secrets.MS_WEBHOOK_URL }}
+      - uses: actions/upload-artifact@master
+        if: always()
+        with:
+          name: event_payload
+          path: /tmp/event.json

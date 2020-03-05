@@ -1,0 +1,11 @@
+name: 'Post notifications to MS Teams'
+description: 'Posts messages and notifications to configured MS Teams channels'
+author: 'EF'
+inputs:
+  webhook_url:
+    description: 'MS Teams Webhook URL'
+  event_id:
+    description: 'Github event that triggers the notification'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
