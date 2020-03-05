@@ -1,7 +1,7 @@
 {
   "@type": "MessageCard",
   "@context": "http://schema.org/extensions",
-  "themeColor": "1853DB",
+  "themeColor": "{THEME_COLOR}}",
   "summary": "Notification from Github actions",
   "sections": [
     {

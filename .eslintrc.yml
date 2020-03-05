@@ -25,3 +25,4 @@ rules:
   import/extensions: 'off'
   import/no-dynamic-require: 0
   indent:  ["error", 4, {"SwitchCase": 1}]
+  no-void: off

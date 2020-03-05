@@ -428,21 +428,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable no-unused-vars */
 const core = __importStar(__webpack_require__(357));
-const path_1 = __webpack_require__(622);
 const fetch = __importStar(__webpack_require__(170));
 const jsonfile_1 = __webpack_require__(890);
 const yup_1 = __webpack_require__(839);
 const typescript_string_operations_1 = __webpack_require__(267);
 const enums_1 = __webpack_require__(297);
 const eventPayloadSchemaBuilder_1 = __webpack_require__(466);
+const constants_1 = __webpack_require__(225);
 const notification_json_1 = __importDefault(__webpack_require__(662));
-const defaultJsonPath = path_1.join(__dirname, '..', 'resources', 'notification.json');
-const workflow = process.env.GITHUB_WORKFLOW;
-const repository = process.env.GITHUB_REPOSITORY;
-const branch = process.env.GITHUB_REF;
-const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
-const triggerEventName = process.env.GITHUB_EVENT_NAME;
-const eventName = core.getInput('event_id') || triggerEventName || 'event';
 function checkBasicInputsSet() {
     if (!(core.getInput('webhook_url')) || !(core.getInput('job_status'))) {
         core.setFailed('Error: Required input for action is missing. Aborting');
@@ -456,7 +449,7 @@ function parseEventToMessage(eventPayloadText) {
     let account;
     let parsedSchema;
     try {
-        switch (eventName) {
+        switch (constants_1.eventName) {
             case enums_1.EventType.PUSH:
                 parsedSchema = eventPayloadSchemaBuilder_1.schemaOnpush.validateSync(eventPayloadText);
                 account = parsedSchema.pusher.name;
@@ -490,8 +483,8 @@ function parseEventToMessage(eventPayloadText) {
                 };
             default:
                 return {
-                    message: eventName ? eventName.replace(/_/g, '.') : 'A GitHub Actions event has occurred',
-                    url: `https://github.com/${repository}/actions`,
+                    message: constants_1.eventName ? constants_1.eventName.replace(/_/g, '.') : 'A GitHub Actions event has occurred',
+                    url: `https://github.com/${constants_1.repository}/actions`,
                     details: core.getInput('details')
                 };
         }
@@ -504,18 +497,19 @@ function parseEventToMessage(eventPayloadText) {
         else {
             errorDetails = error.message;
         }
-        return core.setFailed(`ERROR : ${errorDetails}`);
+        return void core.setFailed(`ERROR : ${errorDetails}`);
     }
 }
 function formatRequestBodyData(notificationMessage) {
     const configuration = {
-        GITHUB_WORKFLOW: workflow,
-        GITHUB_REPOSITORY: repository,
-        GITHUB_REF: branch,
+        GITHUB_WORKFLOW: constants_1.workflow,
+        GITHUB_REPOSITORY: constants_1.repository,
+        GITHUB_REF: constants_1.branch,
         GITHUB_TRIGGER_EVENT_DETAILS: notificationMessage.details,
         GITHUB_TRIGGER_EVENT: notificationMessage.message,
         GITHUB_EVENT_URL: notificationMessage.url,
-        GITHUB_STATUS: core.getInput('job_status')
+        GITHUB_STATUS: constants_1.status,
+        THEME_COLOR: constants_1.jobStatus[constants_1.status.toLowerCase()].themeColor
     };
     return typescript_string_operations_1.String.Format(JSON.stringify(notification_json_1.default), configuration);
 }
@@ -546,8 +540,8 @@ function notifyTeams(notificationMessage) {
     });
 }
 checkBasicInputsSet();
-if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
-    const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
+if (core.getInput('job_status').toUpperCase() !== constants_1.jobStatus.cancelled.status) {
+    const eventNotification = parseEventToMessage(readEventPayloadFile(constants_1.githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);
     }
@@ -4140,7 +4134,38 @@ module.exports = isKeyable;
 
 /***/ }),
 /* 224 */,
-/* 225 */,
+/* 225 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(357));
+const path_1 = __webpack_require__(622);
+exports.defaultJsonPath = path_1.join(__dirname, '..', 'resources', 'notification.json');
+exports.workflow = process.env.GITHUB_WORKFLOW;
+exports.repository = process.env.GITHUB_REPOSITORY;
+exports.branch = process.env.GITHUB_REF;
+exports.githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || exports.defaultJsonPath;
+exports.triggerEventName = process.env.GITHUB_EVENT_NAME;
+exports.eventName = core.getInput('event_id') || exports.triggerEventName || 'event';
+exports.status = core.getInput('job_status');
+exports.jobStatus = {
+    success: { status: 'success', themeColor: '5D985E' },
+    failure: { status: 'failure', themeColor: 'AD362F' },
+    always: { status: 'always', themeColor: '1853DB' },
+    cancelled: { status: 'cancelled', themeColor: 'FB9A5B' }
+};
+
+
+/***/ }),
 /* 226 */,
 /* 227 */,
 /* 228 */,
@@ -9266,7 +9291,7 @@ module.exports = identity;
 /* 662 */
 /***/ (function(module) {
 
-module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"1853DB","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"{GITHUB_WORKFLOW}\"","facts":[{"name":"Repository","value":"{GITHUB_REPOSITORY}"},{"name":"Branch","value":"{GITHUB_REF}"},{"name":"Action","value":"{GITHUB_TRIGGER_EVENT}"},{"name":"Details","value":"{GITHUB_TRIGGER_EVENT_DETAILS}"},{"name":"Url","value":"[Drilldown]({GITHUB_EVENT_URL})"},{"name":"Job Status","value":"{GITHUB_STATUS}"}],"markdown":true}]};
+module.exports = {"@type":"MessageCard","@context":"http://schema.org/extensions","themeColor":"{THEME_COLOR}}","summary":"Notification from Github actions","sections":[{"activityTitle":"Notification triggered for workflow \"{GITHUB_WORKFLOW}\"","facts":[{"name":"Repository","value":"{GITHUB_REPOSITORY}"},{"name":"Branch","value":"{GITHUB_REF}"},{"name":"Action","value":"{GITHUB_TRIGGER_EVENT}"},{"name":"Details","value":"{GITHUB_TRIGGER_EVENT_DETAILS}"},{"name":"Url","value":"[Drilldown]({GITHUB_EVENT_URL})"},{"name":"Job Status","value":"{GITHUB_STATUS}"}],"markdown":true}]};
 
 /***/ }),
 /* 663 */,
