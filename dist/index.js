@@ -533,7 +533,7 @@ function notifyTeams(notificationMessage) {
             if (!res) {
                 core.setFailed('No response from action');
             }
-            else if (res.status && res.status >= 400) {
+            else if (!res.ok) {
                 core.setFailed(`Action failed with status code  ${res.status}`);
             }
             else {

@@ -115,7 +115,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
     }).then((res) => {
         if (!res) {
             core.setFailed('No response from action');
-        } else if (res.status && res.status >= 400) {
+        } else if (!res.ok) {
             core.setFailed(`Action failed with status code  ${res.status}`);
         } else {
             core.info(`statusCode: ${res.status}`);
