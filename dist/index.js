@@ -540,7 +540,7 @@ function notifyTeams(notificationMessage) {
     });
 }
 checkBasicInputsSet();
-if (core.getInput('job_status').toUpperCase() !== constants_1.jobStatus.cancelled.status) {
+if (core.getInput('job_status') !== constants_1.jobStatus.cancelled.status) {
     const eventNotification = parseEventToMessage(readEventPayloadFile(constants_1.githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);

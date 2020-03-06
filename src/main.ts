@@ -129,7 +129,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 checkBasicInputsSet();
-if (core.getInput('job_status').toUpperCase() !== jobStatus.cancelled.status) {
+if (core.getInput('job_status') !== jobStatus.cancelled.status) {
     const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);
