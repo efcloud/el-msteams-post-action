@@ -1,6 +1,5 @@
 /* eslint-disable no-unused-vars */
 import * as core from '@actions/core';
-import { join } from 'path';
 import * as fetch from 'node-fetch';
 import { readFileSync } from 'jsonfile';
 import { ValidationError } from 'yup';
@@ -13,15 +12,17 @@ import {
     schemaOnPullRequest,
     schemaOnpush
 } from './eventPayloadSchemaBuilder';
+import {
+    workflow,
+    repository,
+    eventName,
+    branch,
+    githubEventPayloadFile,
+    status,
+    jobStatus
+} from './constants';
 import notificationTemplate from './resources/notification.json';
 
-const defaultJsonPath = join(__dirname, '..', 'resources', 'notification.json');
-const workflow = process.env.GITHUB_WORKFLOW;
-const repository = process.env.GITHUB_REPOSITORY;
-const branch = process.env.GITHUB_REF;
-const githubEventPayloadFile = process.env.GITHUB_EVENT_PATH || defaultJsonPath;
-const triggerEventName = process.env.GITHUB_EVENT_NAME;
-const eventName: string = core.getInput('event_id') || triggerEventName || 'event';
 
 function checkBasicInputsSet() {
     if (!(core.getInput('webhook_url')) || !(core.getInput('job_status'))) {
@@ -96,7 +97,8 @@ function formatRequestBodyData(notificationMessage: NotificationMessage) {
         GITHUB_TRIGGER_EVENT_DETAILS: notificationMessage.details,
         GITHUB_TRIGGER_EVENT: notificationMessage.message,
         GITHUB_EVENT_URL: notificationMessage.url,
-        GITHUB_STATUS: core.getInput('job_status')
+        GITHUB_STATUS: status,
+        THEME_COLOR: jobStatus[status.toLowerCase()].themeColor
     };
 
     return String.Format(JSON.stringify(notificationTemplate), configuration);
@@ -127,7 +129,7 @@ async function notifyTeams(notificationMessage: NotificationMessage) {
 }
 
 checkBasicInputsSet();
-if (core.getInput('job_status').toUpperCase() !== 'CANCELLED') {
+if (core.getInput('job_status').toLowerCase() !== jobStatus.cancelled.status) {
     const eventNotification = parseEventToMessage(readEventPayloadFile(githubEventPayloadFile));
     if (eventNotification) {
         notifyTeams(eventNotification);
