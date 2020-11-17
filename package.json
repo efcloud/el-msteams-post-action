@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/efcloud/el-msteams-post-action#readme",
   "dependencies": {
-    "@actions/core": "^1.1.3",
+    "@actions/core": "^1.2.6",
     "@actions/github": "^1.1.0",
     "tsc": "^1.20150623.0"
   },
